@@ -20,6 +20,7 @@ local slot1,slot2,slot3,slot4,slot5 = "", "", "", "", ""
 local xRes,yRes = 0.0,0.0
 local saveTableFilter, saveTableFilter2, backupAmmoNormal, ammoNormal, backupAmmoThrow, ammoThrow = {}, {}, {}, {}, {}, {}
 local transferCount, waitForInteraction = 0, nil
+local isAttachedToPlayer = false
 
 function Button_Prompt()
 	Citizen.CreateThread(function()
@@ -87,16 +88,16 @@ AddEventHandler('gum_inventory:get_storage', function(storage, itm, wpn, id, siz
 	for k,v in pairs(storage) do
 		if v.item == 'gold' then
 			if v.count == nil then
-				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=0, limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=0, limit=0.2})
 			else
-				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=(math.floor(v.count*10)/10), limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=(math.floor(v.count*10)/10), limit=0.2})
 			end
 		end
 		if v.item == 'money' then
 			if v.count == nil then
-				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=0, limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=0, limit=0.2})
 			else
-				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=(math.floor(v.count*10)/10), limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=(math.floor(v.count*10)/10), limit=0.2})
 			end
 		end
 		if v.name == nil then
@@ -122,16 +123,16 @@ AddEventHandler('gum_inventory:refresh_storage', function(storage, itm, wpn,id)
 	for k,v in pairs(storage) do
 		if v.item == 'gold' then
 			if v.count == nil then
-				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=0, limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=0, limit=0.2})
 			else
-				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=(math.floor(v.count*10)/10), limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[1].text, item="gold", count=(math.floor(v.count*10)/10), limit=0.2})
 			end
 		end
 		if v.item == 'money' then
 			if v.count == nil then
-				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=0, limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=0, limit=0.2})
 			else
-				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=(math.floor(v.count*10)/10), limit=0})
+				table.insert(storage_table, {weapon=false, label=Config.Language[2].text, item="money", count=(math.floor(v.count*10)/10), limit=0.2})
 			end
 		end
 		if v.name == nil then
@@ -284,7 +285,7 @@ RegisterNUICallback('transfer_to_storage', function(data, cb)
 			end
 			if waitForInteraction == true then
 				if transferCount ~= nil then
-					if transferCount ~= 'close' and tonumber(transferCount) > 0 and tonumber(data.count) >= tonumber(transferCount) then
+					if transferCount ~= 'close' and tonumber(transferCount) > 0 and tonumber(data.count) >= tonumber(transferCount) and tonumber(size) >= (data.size+transferCount*0.2) then
 						TriggerServerEvent("gum_inventory:transfer_money_to_storage", "money", transferCount, id_container)
 					else
 						Show_Other(true, id_container, storage_table, money_state, size)
@@ -366,22 +367,26 @@ RegisterNUICallback('transfer_to_storage', function(data, cb)
 								else
 							
 									if data ~= nil then
-										if transferCount ~= 'close' and transferCount > 0 and data.count >= transferCount then
-											if tonumber(size) >= tonumber(data.size)+tonumber(transferCount*data.limit) then
-												local emptyMetadata = false
-												if data.metaData ~= nil then
-													for z,x in pairs(data.metaData) do
-														emptyMetadata = true
+										if transferCount ~= nil then
+											if transferCount ~= 'close' and transferCount > 0 and data.count >= transferCount then
+												if tonumber(size) >= tonumber(data.size)+tonumber(transferCount*data.limit) then
+													local emptyMetadata = false
+													if data.metaData ~= nil then
+														for z,x in pairs(data.metaData) do
+															emptyMetadata = true
+														end
 													end
-												end
-												if emptyMetadata == true then
-													TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+													if emptyMetadata == true then
+														TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+													else
+														TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, nil)
+													end
 												else
-													TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, nil)
+													Show_Other(true, id_container, storage_table, money_state, size)
+													exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[8].text, 'pistol', 2000)
 												end
 											else
 												Show_Other(true, id_container, storage_table, money_state, size)
-												exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[8].text, 'pistol', 2000)
 											end
 										else
 											Show_Other(true, id_container, storage_table, money_state, size)
@@ -432,7 +437,7 @@ end)
 RegisterNetEvent("gum:SelectedCharacter")
 AddEventHandler("gum:SelectedCharacter", function(charid)
 	Citizen.CreateThread(function() 
-		Citizen.Wait(100)
+		Citizen.Wait(3000)
 		TriggerServerEvent("gum_inventory:get_items")
 		Citizen.Wait(500)
 		TriggerServerEvent("gum_inventory:get_money")
@@ -1066,6 +1071,7 @@ AddEventHandler('gum_inventory:CloseInv', function()
 	Show_Items(false, false)
 	SetNuiFocus(false, false)
 	guiEnabled = false
+	giveItemEnable = false
 end)
 
 function LoadModel(model)
@@ -1081,10 +1087,6 @@ function LoadModel(model)
 	return true
 end
 
-RegisterNetEvent('gum_inventory:getWeaponTable')
-AddEventHandler('gum_inventory:getWeaponTable', function(wepTable)
-	weapon_table = wepTable
-end)
 
 RegisterNetEvent('gum_inventory:reload_weap')
 AddEventHandler('gum_inventory:reload_weap', function()
@@ -1298,6 +1300,11 @@ function equip_weapon_login()
 	can_save = true
 end
 
+RegisterNUICallback('showSkills', function(data, cb)
+	TriggerEvent("gum_inventory:CloseInv")
+	ExecuteCommand("skills")
+end)
+
 RegisterNUICallback('show_weapon', function(data, cb)
   local ped = PlayerPedId()
   local weapon_type = ""
@@ -1330,49 +1337,49 @@ end)
 
 RegisterNUICallback('put_clothe', function(data, cb)
 	if tonumber(data.clothe) == 1 then--Klobouk
-		ExecuteCommand("hats")
+		ExecuteCommand("klobouk")
 	elseif tonumber(data.clothe) == 2 then--Brýle
-		ExecuteCommand("glasses")
+		ExecuteCommand("bryle")
 	elseif tonumber(data.clothe) == 3 then--Masku
-		ExecuteCommand("mask")
+		ExecuteCommand("maska")
 	elseif tonumber(data.clothe) == 4 then--Bandana
 		ExecuteCommand("bandana")
 	elseif tonumber(data.clothe) == 5 then--Kravata,šátek
-		ExecuteCommand("scarf")
-		ExecuteCommand("tie")
+		ExecuteCommand("satek")
+		ExecuteCommand("kravata")
 	elseif tonumber(data.clothe) == 6 then--Plášť pončo
-		ExecuteCommand("plastic")
+		ExecuteCommand("plast")
 		ExecuteCommand("poncho")
 	elseif tonumber(data.clothe) == 7 then--Košile
-		ExecuteCommand("shirt")
+		ExecuteCommand("kosile")
 	elseif tonumber(data.clothe) == 8 then--Vesta
-		ExecuteCommand("vest")
+		ExecuteCommand("vesta")
 	elseif tonumber(data.clothe) == 9 then--kabát
-		ExecuteCommand("coat")
+		ExecuteCommand("kabat")
 	elseif tonumber(data.clothe) == 10 then--Pásy,Doplnky,Brašny
-		ExecuteCommand("bags")
-		ExecuteCommand("accessories")
+		ExecuteCommand("brasny")
+		ExecuteCommand("pasy")
 	elseif tonumber(data.clothe) == 11 then--Prsteny
-		ExecuteCommand("rings")
+		ExecuteCommand("prsteny")
 	elseif tonumber(data.clothe) == 12 then--Rukavice
-		ExecuteCommand("glove")
+		ExecuteCommand("rukavice")
 	elseif tonumber(data.clothe) == 13 then--Nátepníky
-		ExecuteCommand("gauntlets")
+		ExecuteCommand("natepniky")
 	elseif tonumber(data.clothe) == 14 then--Belt
-		ExecuteCommand("belt")
-		ExecuteCommand("holster")
-		ExecuteCommand("secondholster")
-		ExecuteCommand("ammobelt")
+		ExecuteCommand("opasek")
+		ExecuteCommand("pdoplnek")
+		ExecuteCommand("pouzdro")
+		ExecuteCommand("druhepouzdro")
 	elseif tonumber(data.clothe) == 15 then--Kšandy
-		ExecuteCommand("suspenders")
+		ExecuteCommand("ksandy")
 	elseif tonumber(data.clothe) == 16 then--Kalhoty,Chaps,Kšandy
-		ExecuteCommand("pant")
+		ExecuteCommand("kalhoty")
 		ExecuteCommand("chaps")
 		ExecuteCommand("kamase")
-		ExecuteCommand("skirt")
+		ExecuteCommand("sukne")
 	elseif tonumber(data.clothe) == 17 then--Boty
-		ExecuteCommand("boots")
-		ExecuteCommand("spats")
+		ExecuteCommand("boty")
+		ExecuteCommand("ostruhy")
 	end
 end)
 
@@ -1411,7 +1418,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						can_save = true
 						return false
 					else
-						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[45].text.."", 'bag', 1000)
+						-- exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[45].text.."", 'bag', 1000)
 						equip_spam = false
 						can_save = true
 						return false
@@ -1425,7 +1432,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 					TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 0)
 					RemoveWeaponFromPed(PlayerPedId(), GetHashKey(data.model))
 					weapon_second_used = false
-					exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[19].text.."", 'bag', 1000)
+					--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[19].text.."", 'bag', 1000)
 					can_save = true
 					equip_spam = false
 					return false
@@ -1440,7 +1447,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 					TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 0)
 					RemoveWeaponFromPed(PlayerPedId(), GetHashKey(data.model))
 					rifle_first_used = false
-					exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[22].text.."", 'bag', 1000)
+					--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[22].text.."", 'bag', 1000)
 					can_save = true
 					equip_spam = false
 					return false
@@ -1455,7 +1462,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 					TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 0)
 					RemoveWeaponFromPed(PlayerPedId(), GetHashKey(data.model))
 					rifle_second_used = false
-					exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[23].text.."", 'bag', 1000)
+					--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[23].text.."", 'bag', 1000)
 					can_save = true
 					equip_spam = false
 					return false
@@ -1468,7 +1475,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						end
 						TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 0)
 						RemoveWeaponFromPed(PlayerPedId(), GetHashKey(data.model))
-						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[21].text.."", 'bag', 1000)
+						--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[21].text.."", 'bag', 1000)
 						equip_spam = false
 						can_save = true
 						return false
@@ -1488,7 +1495,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 							Citizen.Wait(400)
 							TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
 							weapon_first_used = v.name
-							exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[12].text.."", 'bag', 1000)
+							--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[12].text.."", 'bag', 1000)
 							can_save = true
 							equip_spam = false
 						elseif weapon_second_used == false then
@@ -1502,7 +1509,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 							Citizen.Wait(400)
 							TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
 							weapon_second_used = v.name
-							exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[13].text.."", 'bag', 1000)
+							--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[13].text.."", 'bag', 1000)
 							can_save = true
 							equip_spam = false
 						end
@@ -1520,7 +1527,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						Citizen.InvokeNative(0xFCCC886EDE3C63EC, PlayerPedId(), false, false, false)
 						Citizen.Wait(400)
 						TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
-						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[18].text.."", 'bag', 1000)
+						--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[18].text.."", 'bag', 1000)
 						can_save = true
 						equip_spam = false
 					end
@@ -1534,7 +1541,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						Citizen.Wait(400)
 						TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
 						rifle_first_used = v.name
-						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[15].text.."", 'bag', 1000)
+						--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[15].text.."", 'bag', 1000)
 						can_save = true
 						equip_spam = false
 					elseif rifle_second_used == false then
@@ -1545,7 +1552,7 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						Citizen.Wait(400)
 						TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
 						rifle_second_used = v.name
-						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[16].text.."", 'bag', 1000)
+						--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[16].text.."", 'bag', 1000)
 						can_save = true
 						equip_spam = false
 					end
@@ -1614,6 +1621,7 @@ AddEventHandler('gum_inventory:send_list_money', function(money, gold)
 	money_state = money
 	gold_state = gold
 end)
+
 RegisterNetEvent('gum_inventory:send_list_inventory')
 AddEventHandler('gum_inventory:send_list_inventory', function(table, wtable, ttable, wptable)
 	count_in_inventory = 0.0
@@ -1868,6 +1876,7 @@ end)
 Citizen.CreateThread(function()
 	local player_prompt
 	local player_prompt2
+	local player_prompt3
 	while true do
 		local combat_stance = IsPedInMeleeCombat(PlayerPedId())
 		if slot1 ~= "" then
@@ -1942,15 +1951,29 @@ Citizen.CreateThread(function()
 
 			if player_prompt then				player_prompt:delete()			end
 			if player_prompt2 then				player_prompt2:delete()			end
+			if player_prompt3 then				player_prompt3:delete()			end
 
 			local mycoords = GetEntityCoords(PlayerPedId())
 			local targetCoords = GetEntityCoords(tgt1)
 			local distance = GetDistanceBetweenCoords(mycoords.x, mycoords.y, mycoords.z, targetCoords.x, targetCoords.y, targetCoords.z, false)
 			if distance < 2 then
-				if combat_stance == false and not IsEntityDead(tgt1) and GetMount(tgt1) == 0 and GetVehiclePedIsUsing(tgt1) == 0 then
+				if combat_stance == false and not IsEntityDead(tgt1) and GetEntityHealth(PlayerPedId()) > 0 and GetMount(tgt1) == 0 and GetMount(PlayerPedId()) == 0 and GetVehiclePedIsUsing(tgt1) == 0 and GetEntityHealth(tgt1) >= 0.0 then
+					local canHostage = false
+					local _, wepHash = GetCurrentPedWeapon(PlayerPedId(), true, 0, true)
+					if GetHashKey('GROUP_MELEE') == GetWeapontypeGroup(wepHash) then
+						canHostage = true
+					end
+
 					local promptGroup = PromptGetGroupIdForTargetEntity(tgt1)
 					player_prompt = Uiprompt:new(`INPUT_CONTEXT_X`, ""..Config.Language[28].text.."", promptGroup)
 					player_prompt2 = Uiprompt:new(`INPUT_INTERACT_OPTION1`, ""..Config.Language[29].text.."", promptGroup)
+					if canHostage ~= false then
+						player_prompt3 = Uiprompt:new(`INPUT_PROMPT_PAGE_NEXT`, "Hostage", promptGroup)
+						if Citizen.InvokeNative(0x305C8DCD79DA8B0F, 0, `INPUT_PROMPT_PAGE_NEXT`) then
+							TriggerServerEvent("gum_inventory:hostage", playerid)
+							Citizen.Wait(1000)
+						end
+					end
 					if Citizen.InvokeNative(0x305C8DCD79DA8B0F, 0, `INPUT_INTERACT_OPTION1`) then
 						TriggerServerEvent("gum_inventory:give_slap", playerid)
 						Citizen.Wait(2000)
@@ -1968,6 +1991,73 @@ Citizen.CreateThread(function()
 		Citizen.Wait(5)
 	end
 end)
+RegisterNetEvent('gum_inventory:hostage')
+AddEventHandler('gum_inventory:hostage', function(who, arg)
+	if arg == true then
+		if isAttachedToPlayer == false then
+			isAttachedToPlayer = true
+			playAnim2("script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_yukon", -1, 25)
+			Citizen.CreateThread(function()
+				while isAttachedToPlayer == true do
+					if IsEntityPlayingAnim(PlayerPedId(), "script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_yukon", 3) == false then
+						playAnim2("script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_yukon", -1, 25)
+						Citizen.Wait(100)					
+					end
+					if GetEntityHealth(PlayerPedId()) <= 0.0 then
+						TriggerServerEvent("gum_inventory:clearHostage", who)
+						isAttachedToPlayer = false
+						ClearPedTasks(PlayerPedId())
+						break
+					end
+					if Citizen.InvokeNative(0x9682F850056C9ADE, PlayerPedId()) ~= false then
+						TriggerServerEvent("gum_inventory:clearHostage", who)
+						isAttachedToPlayer = false
+						ClearPedTasks(PlayerPedId())
+						break
+					end
+					if Citizen.InvokeNative(0x305C8DCD79DA8B0F, 0, 0x07CE1E61) then
+						TriggerServerEvent("gum_inventory:clearHostage", who)
+						isAttachedToPlayer = false
+						ClearPedTasks(PlayerPedId())
+						break
+					end
+					Citizen.Wait(5)
+				end
+			end)
+		else
+			isAttachedToPlayer = false
+			ClearPedTasks(PlayerPedId())
+			Citizen.Wait(10)
+			playAnim2("mech_grapple@pistol@_male@_ambient@_healthy@front@_streamed","release_att", 600, 25)
+		end
+	else
+		if isAttachedToPlayer == false then
+			isAttachedToPlayer = true
+			playAnim2("script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_hostage", -1, 1)
+			AttachEntityToEntity(PlayerPedId(), GetPlayerPed(GetPlayerFromServerId(who)), 0, -0.15, 0.28, 0.11, 0.0, 0.0, 0.0, true, true, false, true, 1, true)
+			Citizen.CreateThread(function()
+				while isAttachedToPlayer == true do
+					if IsEntityPlayingAnim(PlayerPedId(), "script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_hostage", 3)  == false then
+						playAnim2("script_mp@bounty@legendary@lbnik@ig@lbnik_ig2_humanshield","loop_humanshield_hostage", -1, 25)
+						Citizen.Wait(100)
+					end
+					Citizen.Wait(5)
+				end
+			end)
+		else
+			isAttachedToPlayer = false
+			ClearPedTasks(PlayerPedId())
+			DetachEntity(PlayerPedId(), true, false)
+		end
+	end
+end)
+RegisterNetEvent('gum_inventory:clearHostage')
+AddEventHandler('gum_inventory:clearHostage', function()
+	isAttachedToPlayer = false
+	ClearPedTasks(PlayerPedId())
+	DetachEntity(PlayerPedId(), 1, 1)
+end)
+
 
 RegisterNetEvent('gum_inventory:send_slap')
 AddEventHandler('gum_inventory:send_slap', function(who, random, take_or_give)
@@ -2357,6 +2447,7 @@ RegisterNUICallback('drop_item', function(data, cb)
 		exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[37].text.."", 'bag', 2000)
 	end
 end)
+local giveItemEnable = false
 
 
 RegisterNUICallback('exit', function(data, cb)
@@ -2368,6 +2459,9 @@ RegisterNUICallback('exit', function(data, cb)
 	Show_Items(false, false)
     SetNuiFocus(false, false)
     guiEnabled = false
+end)
+RegisterNUICallback('exit2', function(data, cb)
+	giveItemEnable = false
 end)
 
 RegisterNetEvent('gum_inventory:close_storage')
@@ -2410,6 +2504,17 @@ function GetPlayers()
 	for i = 0, 256 do
 		if NetworkIsPlayerActive(i) then
 			table.insert(players, i)
+		end
+	end
+	return players
+end
+
+
+function GetPlayersClick()
+	local players = {}
+	for i = 0, 256 do
+		if NetworkIsPlayerActive(i) then
+            table.insert(players, GetPlayerServerId(i))
 		end
 	end
 	return players
@@ -2704,3 +2809,284 @@ SetFixed = function(self, offset, value, code)
     self.length = self.blob:len()
     return self
 end
+
+
+
+-------------------------------------------
+local playerDragId = 0
+
+
+RegisterNUICallback('transferItem', function(data, cb)
+	TriggerEvent("gum_inventory:CloseInv2");
+	giveItemEnable = true
+end)
+
+RegisterNetEvent('gum_inventory:CloseInv2')
+AddEventHandler('gum_inventory:CloseInv2', function()
+	Show_Items(false, false)
+	SetNuiFocus(true, true)
+end)
+
+RegisterNUICallback('transferToPlayer', function(data, cb)
+	giveItemEnable = false
+	idPlayerForItem = playerDragId
+	if idPlayerForItem ~= 0 then
+		if data.item == "money" then
+			TriggerEvent("guminputs:getInput", Config.Language[2].text, Config.Language[4].text, function(cb)
+				local count_money = tonumber(cb)
+				if count_money ~= nil then
+					if count_money ~= 'close' and count_money > 0 and data.count >= count_money then
+						TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
+						TriggerServerEvent("gum_inventory:give_money", tonumber(idPlayerForItem), count_money, GetPlayerServerId(PlayerId()))
+						clearThisFunction()
+					else
+						clearThisFunction()
+					end
+				end
+			end)
+		elseif data.item == "gold" then
+			TriggerEvent("guminputs:getInput", Config.Language[3].text, Config.Language[5].text, function(cb)
+				local count_gold = tonumber(cb)
+				if count_gold ~= nil then
+					if count_gold ~= 'close' and count_gold > 0 and data.count >= count_gold then
+						TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
+						TriggerServerEvent("gum_inventory:give_gold", tonumber(idPlayerForItem), count_gold, GetPlayerServerId(PlayerId()))
+						clearThisFunction()
+					else
+						clearThisFunction()
+					end
+				end
+			end)
+		else
+			if data.size <= data.size+size then
+				if data.weapon == false then
+					if tonumber(data.countInInventory) == 1 then
+						TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
+						TriggerServerEvent("gumCore:subItemByID", GetPlayerServerId(PlayerId()), data.itemId, 1)
+						local emptyMetadata = false
+						if data.metaData ~= nil then
+							for z,x in pairs(data.metaData) do
+								emptyMetadata = true
+							end
+						end
+						if emptyMetadata == true then
+							TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, data.count, data.metaData, GetPlayerServerId(PlayerId()))
+						else
+							TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, data.count, nil, GetPlayerServerId(PlayerId()))
+						end
+						clearThisFunction()
+					else
+						TriggerEvent("guminputs:getInput", Config.Language[3].text, Config.Language[6].text, function(cb)
+							local count_item = tonumber(cb)
+							if count_item ~= nil then
+								if count_item ~= 'close' and count_item > 0 and data.count >= count_item then
+									SetNuiFocus(false, false)
+									TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
+									TriggerServerEvent("gumCore:subItemByID", GetPlayerServerId(PlayerId()), data.itemId, count_item)
+									local emptyMetadata = false
+									if data.metaData ~= nil then
+										for z,x in pairs(data.metaData) do
+											emptyMetadata = true
+										end
+									end
+									if emptyMetadata == true then
+										TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, count_item, data.metaData, GetPlayerServerId(PlayerId()))
+									else
+										TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, count_item, nil, GetPlayerServerId(PlayerId()))
+									end
+									clearThisFunction()
+								else
+									clearThisFunction()
+								end
+							end
+						end)
+					end
+				else
+					if data.used == 1 then
+						clearThisFunction()
+						exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[7].text, 'pistol', 2000)
+					else
+						for k,v in pairs(weapon_table) do
+							if tonumber(data.id) == tonumber(v.id) then
+								TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
+								TriggerServerEvent("gumCore:giveWeapon", GetPlayerServerId(PlayerId()), data.id, tonumber(idPlayerForItem))
+								for c,d in pairs(json.decode(v.ammo)) do
+									Citizen.InvokeNative(0xB6CFEC32E3742779, PlayerPedId(),GetHashKey(c), 999, 0x2188E0A3);
+								end
+								clearThisFunction()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end)
+function clearThisFunction()
+	giveItemEnable = false
+	idPlayerForItem = 0
+	playerDragId = 0
+	SetNuiFocus(false, false)
+end
+
+Citizen.CreateThread(function()
+	while true do
+		local loop = 500
+		if giveItemEnable then
+			loop = 5
+			local a,b,c,d = screenToWorld(-1, 0)
+			local entity = GetEntityCoords(c)
+			local pCoords = GetEntityCoords(PlayerPedId())
+			playerDragId = 0
+			for k,v in pairs(GetPlayersClick()) do
+				if GetPlayerPed(GetPlayerFromServerId(v)) == c and PlayerPedId() ~= c then
+					if GetDistanceBetweenCoords(entity.x, entity.y, entity.z, pCoords.x, pCoords.y, pCoords.z, true) < 7.0 then
+						DisableControlAction(0, 0xB2F377E8, true)
+						DisableControlAction(0, 0x07CE1E61, true)
+						playerDragId = v
+						DrawText3D(entity.x,entity.y,entity.z+1.0, "↓")
+						Citizen.InvokeNative(0x2A32FAA57B937173, -1795314153, entity.x,entity.y,entity.z-1.0, 0, 0, 0, 0, 0, 0, 0.6, 0.6, 1.0, 98, 146, 202, 80, 0, 0, 2, 0, 0, 0, 0)
+					end
+				end
+			end
+		end
+		TriggerEvent("gum_meta_heal:resSetup", xRes, yRes)
+		Citizen.Wait(loop)
+	end
+end)
+
+RegisterNUICallback('screen', function(data, cb)
+    xRes = tonumber(data.x)
+    yRes = tonumber(data.y)
+end)
+
+function mulNumber(vector1, value)
+    local result = {}
+    result.x = vector1.x * value
+    result.y = vector1.y * value
+    result.z = vector1.z * value
+    return result
+end
+
+-- Add one vector to another.
+function addVector3(vector1, vector2) 
+    return {x = vector1.x + vector2.x, y = vector1.y + vector2.y, z = vector1.z + vector2.z}   
+end
+
+-- Subtract one vector from another.
+function subVector3(vector1, vector2) 
+    return {x = vector1.x - vector2.x, y = vector1.y - vector2.y, z = vector1.z - vector2.z}
+end
+
+function rotationToDirection(rotation) 
+    local z = degToRad(rotation.z)
+    local x = degToRad(rotation.x)
+    local num = math.abs(math.cos(x))
+
+    local result = {}
+    result.x = -math.sin(z) * num
+    result.y = math.cos(z) * num
+    result.z = math.sin(x)
+    return result
+end
+
+function w2s(position)
+    local onScreen, _x, _y = GetScreenCoordFromWorldCoord(position.x, position.y, position.z)
+    if not onScreen then
+        return nil
+    end
+
+    local newPos = {}
+    newPos.x = (_x - 0.5) * 2
+    newPos.y = (_y - 0.5) * 2
+    newPos.z = 0
+    return newPos
+end
+
+function processCoordinates(x, y) 
+    local screenX, screenY = xRes, yRes
+
+    local relativeX = 1 - (x / screenX) * 1.0 * 2
+    local relativeY = 1 - (y / screenY) * 1.0 * 2
+
+    if relativeX > 0.0 then
+        relativeX = -relativeX;
+    else
+        relativeX = math.abs(relativeX)
+    end
+
+    if relativeY > 0.0 then
+        relativeY = -relativeY
+    else
+        relativeY = math.abs(relativeY)
+    end
+
+    return { x = relativeX, y = relativeY }
+end
+
+function s2w(camPos, relX, relY)
+    local camRot = GetGameplayCamRot(0)
+    local camForward = rotationToDirection(camRot)
+    local rotUp = addVector3(camRot, { x = 10, y = 0, z = 0 })
+    local rotDown = addVector3(camRot, { x = -10, y = 0, z = 0 })
+    local rotLeft = addVector3(camRot, { x = 0, y = 0, z = -10 })
+    local rotRight = addVector3(camRot, { x = 0, y = 0, z = 10 })
+
+    local camRight = subVector3(rotationToDirection(rotRight), rotationToDirection(rotLeft))
+    local camUp = subVector3(rotationToDirection(rotUp), rotationToDirection(rotDown))
+
+    local rollRad = -degToRad(camRot.y)
+    local camRightRoll = subVector3(mulNumber(camRight, math.cos(rollRad)), mulNumber(camUp, math.sin(rollRad)))
+    local camUpRoll = addVector3(mulNumber(camRight, math.sin(rollRad)), mulNumber(camUp, math.cos(rollRad)))
+
+    local point3D = addVector3(addVector3(addVector3(camPos, mulNumber(camForward, 10.0)), camRightRoll), camUpRoll)
+
+    local point2D = w2s(point3D)
+
+    if point2D == undefined then
+        return addVector3(camPos, mulNumber(camForward, 10.0))
+    end
+
+    local point3DZero = addVector3(camPos, mulNumber(camForward, 10.0))
+    local point2DZero = w2s(point3DZero)
+
+    if point2DZero == nil then
+        return addVector3(camPos, mulNumber(camForward, 10.0))
+    end
+
+    local eps = 0.001
+
+    if math.abs(point2D.x - point2DZero.x) < eps or math.abs(point2D.y - point2DZero.y) < eps then
+        return addVector3(camPos, mulNumber(camForward, 10.0))
+    end
+
+    local scaleX = (relX - point2DZero.x) / (point2D.x - point2DZero.x)
+    local scaleY = (relY - point2DZero.y) / (point2D.y - point2DZero.y)
+    local point3Dret = addVector3(addVector3(addVector3(camPos, mulNumber(camForward, 10.0)), mulNumber(camRightRoll, scaleX)), mulNumber(camUpRoll, scaleY))
+
+    return point3Dret
+end
+
+function degToRad(deg)
+    return (deg * math.pi) / 180.0
+end
+
+function screenToWorld(flags, ignore)
+    local x, y = GetNuiCursorPosition()
+
+    local absoluteX = x
+    local absoluteY = y
+
+    local camPos = GetGameplayCamCoord()
+    local processedCoords = processCoordinates(absoluteX, absoluteY)
+    local target = s2w(camPos, processedCoords.x, processedCoords.y)
+
+    local dir = subVector3(target, camPos)
+    local from = addVector3(camPos, mulNumber(dir, 0.05))
+    local to = addVector3(camPos, mulNumber(dir, 300))
+
+    local ray = StartShapeTestRay(from.x, from.y, from.z, to.x, to.y, to.z, flags, ignore, 0)
+	local a, b, c, d, e = GetShapeTestResult(ray)
+    return b, c, e, to
+end
+

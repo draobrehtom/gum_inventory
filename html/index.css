@@ -743,11 +743,16 @@
 .grid0 {
     overflow-y: scroll;
     overflow-x: hidden;
-    position: relative;
+    position:absolute;
+    display: grid;
+    grid-template-columns: repeat(5, 73px);
+    grid-auto-rows: 73px;
+	width: 380px;
 	max-width: 380px;
+	height: 280px;
 	max-height: 280px;
-	top: 20%;
-	left: 2%;
+	top: 29%;
+	left: 8%;
 }
 
 .grid1 {
@@ -761,14 +766,22 @@
 } 
 
 .grid_other {
+    position:absolute;
     overflow-y: scroll;
     overflow-x: hidden;
-    position: relative;
+    display: grid;
+    grid-template-columns: repeat(9, 73px);
+    /* grid-template-rows: repeat(auto, 73px); */
+    grid-auto-rows: 73px;
+    width: 680px;
 	max-width: 680px;
+    height: 420px;
 	max-height: 420px;
-	top: 20%;
+	top: 23%;
 	left: 5%;
 } 
+
+
 #container_other {
     -webkit-user-drag: none;
      user-select: none;
@@ -864,7 +877,7 @@ h2 {
 }
 
 
-.item.muuri-item-dragging {
+/* .item.muuri-item-dragging {
     z-index: 3;
 }
 
@@ -874,16 +887,22 @@ h2 {
 
 .item.muuri-item-hidden {
     z-index: 0;
-}
+} */
 
 .item {
     display: block;
-    position: absolute;
+    /* position: absolute; */
     width: 65px;
     height: 65px;
     margin: 5px;
     text-align: center;
     z-index: 1;
+}
+th { 
+    color: white;
+    font-size: 25px;
+    width: 400px;
+    text-align: center;
 }
 .itemUsed {
     display: block;
@@ -938,21 +957,21 @@ h2 {
 #input_size1 {
     color: rgb(223, 221, 221);
     background: #4d4d4d;
-    width: 50px;
+    width: 30px;
     overflow: hidden;
     outline: none;
 }
 #input_size2 {
     color: rgb(255, 255, 255);
     background: #4d4d4d;
-    width: 50px;
+    width: 30px;
     overflow: hidden;
     outline: none;
 }
 #context-menu {
     position: fixed;
     z-index: 10000;
-    width: 155px;
+    width: 135px;
     background: #1b1a1a;
     border-radius: 4px;
     transform: scale(0);
@@ -978,7 +997,7 @@ h2 {
     background: #343434;
   }
   
-#show_weapons {
+  #show_weapons {
     position: absolute;
 	top: 125px;
 	right: 10%;
@@ -996,6 +1015,29 @@ h2 {
     width: 50px;
     height: 50px;
     background-image: url('images/showa.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+
+#show_skills {
+    position: absolute;
+	top: 125px;
+	right: 25%;
+    width: 50px;
+    height: 50px;
+    background-image: url('images/showSkills.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#show_skills:hover {
+    position: absolute;
+	top: 125px;
+	right: 25%;
+    width: 50px;
+    height: 50px;
+    background-image: url('images/showSkillsa.png');
     background-size: 100% 100%;
     background-color: transparent;
     background-repeat: no-repeat;

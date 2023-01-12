@@ -1,6 +1,6 @@
 Config = {}
 
-Config.Max_Items = 50
+Config.Max_Items = 5000
 Config.Max_Weapons = 10
 
 Config.Language = {
@@ -49,4 +49,5 @@ Config.Language = {
     [43] = {text = "He cant hold more weapons.",},
     [44] = {text = "You cant hold more weapons.",},
     [45] = {text = "You must unequip first second weapon.",},
+    [46] = {text = "Inventory storage is opened. But player is not active try again.",},
 }

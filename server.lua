@@ -6,12 +6,13 @@ end)
 Inventory = exports.gum_inventory:gum_inventoryApi()
 gum = exports.gum_core:gumAPI()
 
+local itemTableForData = {}
+local weaponTableForData = {}
 local itm_table = {}
 local wpn_table = {}
 local inv_table = {}
 local usableItemsFunctions = {}
 local in_inventory_weapons = {}
-local openstorages = {}
 local new_table = {}
 local searched = {}
 local inventory_table_sended = {}
@@ -21,6 +22,7 @@ local in_inventory_count = {}
 local count_calc = {}
 local lastUsedItemId = {}
 local openstorages = {}
+local canSaveInventory = {}
 
 RegisterServerEvent('gumCore:registerUsableItem')
 AddEventHandler('gumCore:registerUsableItem', function(name, cb)
@@ -32,6 +34,12 @@ Inventory.RegisterUsableItem("cleanshort", function(data)
 	local _source = source
 	TriggerClientEvent('gum_inventory:cleaning_weapons', data.source)
 	Inventory.subItem(data.source, "cleanshort", 1)
+end)
+
+Inventory.RegisterUsableItem("Tallowcloth", function(data)
+	local _source = source
+	TriggerClientEvent('gum_inventory:cleaning_weapons', data.source)
+	Inventory.subItem(data.source, "Tallowcloth", 1)
 end)
 
 
@@ -113,7 +121,6 @@ AddEventHandler('gumCore:registerstorage', function(source, id, size)
 	end
 end)
 
-
 RegisterServerEvent('gumCore:openstorage')
 AddEventHandler('gumCore:openstorage', function(source, id)
 	local _source = source
@@ -132,14 +139,19 @@ AddEventHandler('gumCore:openstorage', function(source, id)
 			end
 		end
 	end
-	exports.ghmattimysql:execute('SELECT items,size FROM inventory_storage WHERE identifier=@identifier' , {["identifier"]=id}, function(result)
-		if result[1] ~= nil then
+	local User = gumCore.getUser(tonumber(_source))
+	local Character = User.getUsedCharacter
+	local identifier = Character.identifier
+	local charid = Character.charIdentifier
+	exports.ghmattimysql:execute('SELECT items,size FROM inventory_storage WHERE identifier=@identifier' , {["identifier"]=id}, function(resultStorage)
+		if resultStorage[1] ~= nil then
 			table.insert(openstorages[_source], id)
-			TriggerClientEvent("gum_inventory:get_storage", tonumber(_source), json.decode(result[1].items), itm_table, wpn_table, id, result[1].size)
+			TriggerClientEvent("gum_inventory:get_storage", tonumber(_source), json.decode(resultStorage[1].items), itm_table, wpn_table, id, resultStorage[1].size)
 		else
 			TriggerClientEvent("gum_notify:notify", tonumber(_source), Config.Language[10].text, Config.Language[38].text, 'bag', 2500)
 		end
 	end)
+
 end)
 
 function playerIsActive(playerId)
@@ -242,11 +254,13 @@ AddEventHandler('gum:use', function(name, id, args)
 		end
 	end
 end)
+
 RegisterServerEvent('gumCore:getLastUsedId')
 AddEventHandler('gumCore:getLastUsedId', function(source, cb)
 	local _source = source
 	cb(lastUsedItemId[tonumber(_source)])
 end)
+
 RegisterServerEvent('gum_inventory:get_storage_srv')
 AddEventHandler('gum_inventory:get_storage_srv', function(source, id)
 	local _source = source
@@ -263,40 +277,46 @@ AddEventHandler('gum_inventory:transfer_item_to_storage', function(item, count, 
 	local User = gumCore.getUser(tonumber(_source))
 	local Character = User.getUsedCharacter
 	local charid = Character.charIdentifier
-	if tostring(id) ~= '0' then
+	if tostring(id) ~= '0' or tostring(id) ~= '' or tostring(id) ~= nil then
 		exports.ghmattimysql:execute('SELECT items FROM inventory_storage WHERE identifier=@identifier' , {["identifier"]=id}, function(result)
-			if result ~= nil then
-				for k,v in pairs(result) do
-					for k2,v2 in pairs(v) do
-						searched[tonumber(_source)] = false
-						new_table[tonumber(_source)] = {}
-						new_table[tonumber(_source)] = json.decode(v2)
-						for k3,v3 in pairs(new_table[tonumber(_source)]) do
-							if v3.item == item then
-								if searched[tonumber(_source)] == false and metaData == nil then
-									searched[tonumber(_source)] = true
-									table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count+v3.count), metaData={}, itemId=itemId})
-									table.remove(new_table[tonumber(_source)], k3)
-								end
-							end
-						end
-						if searched[tonumber(_source)] == false then
+			if result[1] ~= nil then
+				new_table[tonumber(_source)] = {}
+				new_table[tonumber(_source)] = json.decode(result[1].items)
+				searched[tonumber(_source)] = false
+				for a,b in pairs(new_table[tonumber(_source)]) do
+					if item == b.item and metaData == nil then
+						searched[tonumber(_source)] = true
+					end
+				end
+				if searched[tonumber(_source)] == true then
+					for a,b in pairs(new_table[tonumber(_source)]) do
+						if item == b.item then
 							if metaData == nil then
-								table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count), metaData={}, itemId=itemId})
-							else
-								table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count), metaData=metaData, itemId=itemId})
+								table.remove(new_table[tonumber(_source)], a)
+								table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count+b.count), metaData={}, itemId=itemId})
+								exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
+								function (result)
+									gumCore.Debug("Player with CharID : "..charid.." Transfer item to storage : "..id)
+									Inventory.subItemByID(tonumber(_source), itemId, count)
+									TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
+								end)
+								return false
 							end
-						end
-						Inventory.subItemByID(tonumber(_source), itemId, count)
-
-						if tostring(id) ~= '0' then
-							gumCore.Debug("Player with CharID : "..charid.." \nTransfer item to storage : "..id)
-							exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
-							function (result)
-								TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
-							end)
 						end
 					end
+				else
+					if metaData == nil then
+						table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count), metaData={}, itemId=itemId})
+					else
+						table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(count), metaData=metaData, itemId=itemId})
+					end
+					exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
+					function (result)
+						gumCore.Debug("Player with CharID : "..charid.." Transfer item to storage : "..id)
+						Inventory.subItemByID(tonumber(_source), itemId, count)
+						TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
+					end)
+					return false
 				end
 			end
 		end)
@@ -312,48 +332,46 @@ AddEventHandler('gum_inventory:transfer_item_from_storage', function(item, count
 	local User = gumCore.getUser(tonumber(_source))
 	local Character = User.getUsedCharacter
 	local charid = Character.charIdentifier
-	if tostring(id) ~= '0' then
+	if tostring(id) ~= '0' or tostring(id) ~= '' or tostring(id) ~= nil then
 		exports.ghmattimysql:execute('SELECT items FROM inventory_storage WHERE identifier=@identifier' , {["identifier"]=id}, function(result)
 			if result ~= nil then
 				TriggerEvent("gumCore:canCarryItem", tonumber(_source), item, math.floor(tonumber(count)), function(canCarry2)
 					if canCarry2 then
-						for k,v in pairs(result) do
-							for k2,v2 in pairs(v) do
-								searched[tonumber(_source)] = false
-								new_table[tonumber(_source)] = {}
-								new_table[tonumber(_source)] = json.decode(v2)
-								for k3,v3 in pairs(new_table[tonumber(_source)]) do
-									if v3.item == item then
-										if searched[tonumber(_source)] == false and metaData == nil then
-											searched[tonumber(_source)] = true
-											if math.floor(v3.count-tonumber(count)) ~= 0 then
-												table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(v3.count-tonumber(count)), metaData={}, itemId=itemId})
-											end
-											table.remove(new_table[tonumber(_source)], k3)
-										end
-										if searched[tonumber(_source)] == false and metaData ~= nil then
-											searched[tonumber(_source)] = true
-											if math.floor(v3.count-tonumber(count)) ~= 0 then
-												table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(v3.count-tonumber(count)), metaData=metaData, itemId=itemId})
-											end
-											table.remove(new_table[tonumber(_source)], k3)
-										end
-									end
-								end
+						new_table[tonumber(_source)] = {}
+						new_table[tonumber(_source)] = json.decode(result[1].items)
+						for a,b in pairs(new_table[tonumber(_source)]) do
+							if tonumber(itemId) == tonumber(b.itemId) and item == b.item then
 								if metaData == nil then
+									table.remove(new_table[tonumber(_source)], a)
+									if math.floor(b.count-tonumber(count)) ~= 0 then
+										table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(b.count-tonumber(count)), metaData={}, itemId=itemId})
+									end
 									Inventory.addItem(tonumber(_source), item, math.floor(tonumber(count)))
-								else
-									Inventory.addItem(tonumber(_source), item, math.floor(tonumber(count)), metaData)
-								end
-								if tostring(id) ~= '0' then
-									gumCore.Debug("Player with CharID : "..charid.." \nTrasnfer item from storage : "..id)
 									exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 									function (result)
-										TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
 									end)
+									gumCore.Debug("Player with CharID : "..charid.." Trasnfer item from storage : "..id)
+									Citizen.Wait(100)
+									TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
+									return false
+								end
+								if metaData ~= nil then
+									table.remove(new_table[tonumber(_source)], a)
+									if math.floor(b.count-tonumber(count)) ~= 0 then
+										table.insert(new_table[tonumber(_source)], {item=item, count=math.floor(b.count-tonumber(count)), metaData=metaData, itemId=itemId})
+									end
+									Inventory.addItem(tonumber(_source), item, math.floor(tonumber(count)), metaData)
+									exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
+									function (result)
+									end)
+									gumCore.Debug("Player with CharID : "..charid.." Trasnfer item from storage : "..id)
+									Citizen.Wait(100)
+									TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
+									return false
 								end
 							end
 						end
+
 					else
 						TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
 						TriggerClientEvent("gum_notify:notify", tonumber(_source), Config.Language[10].text, Config.Language[41].text, 'bag', 2500)
@@ -397,7 +415,7 @@ AddEventHandler('gum_inventory:transfer_money_to_storage', function(item, count,
 							Character.removeCurrency(tonumber(_source), 0, tonumber(count))
 
 							if tostring(id) ~= '0' then
-								gumCore.Debug("Player with CharID : "..charid.." \nTransfer money to storage : "..id)
+								gumCore.Debug("Player with CharID : "..charid.." Transfer money to storage : "..id)
 								exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 								function (result)
 									TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -415,7 +433,6 @@ AddEventHandler('gum_inventory:transfer_money_to_storage', function(item, count,
 		gumCore.Error("Player with CharID : "..charid.." \nSometing is wrong : "..id.." with transfering money to storage")
 	end
 end)
-
 
 RegisterServerEvent('gum_inventory:transfer_gold_to_storage')
 AddEventHandler('gum_inventory:transfer_gold_to_storage', function(item, count, id)
@@ -448,7 +465,7 @@ AddEventHandler('gum_inventory:transfer_gold_to_storage', function(item, count, 
 							Character.removeCurrency(tonumber(_source), 1, tonumber(count))
 
 							if tostring(id) ~= '0' then
-								gumCore.Debug("Player with CharID : "..charid.." \nTransfer gold to storage : "..id)
+								gumCore.Debug("Player with CharID : "..charid.." Transfer gold to storage : "..id)
 								exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 								function (result)
 									TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -473,7 +490,6 @@ AddEventHandler('gum_inventory:transfer_money_from_storage', function(item, coun
 	local User = gumCore.getUser(tonumber(_source))
 	local Character = User.getUsedCharacter
 	local charid = Character.charIdentifier
-
 	if tostring(id) ~= '0' then
 		exports.ghmattimysql:execute('SELECT items FROM inventory_storage WHERE identifier=@identifier' , {["identifier"]=id}, function(result)
 			if result ~= nil then
@@ -496,7 +512,7 @@ AddEventHandler('gum_inventory:transfer_money_from_storage', function(item, coun
 						Character.addCurrency(tonumber(_source), 0, tonumber(count))
 
 						if tostring(id) ~= '0' then
-							gumCore.Debug("Player with CharID : "..charid.." \nTransfer money from storage : "..id)
+							gumCore.Debug("Player with CharID : "..charid.." Transfer money from storage : "..id)
 							exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 							function (result)
 								TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -510,7 +526,6 @@ AddEventHandler('gum_inventory:transfer_money_from_storage', function(item, coun
 		gumCore.Error("Player with CharID : "..charid.." \nSometing is wrong : "..id.." with transfering money from storage")
 	end
 end)
-
 
 RegisterServerEvent('gum_inventory:transfer_gold_from_storage')
 AddEventHandler('gum_inventory:transfer_gold_from_storage', function(item, count, id)
@@ -540,7 +555,7 @@ AddEventHandler('gum_inventory:transfer_gold_from_storage', function(item, count
 						Character.addCurrency(tonumber(_source), 1, tonumber(count))
 
 						if tostring(id) ~= '0' then
-							gumCore.Debug("Player with ID : ".._source.." \nTrasnfer gold from storage : "..id)
+							gumCore.Debug("Player with ID : ".._source.." Trasnfer gold from storage : "..id)
 							exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 							function (result)
 								TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -554,8 +569,6 @@ AddEventHandler('gum_inventory:transfer_gold_from_storage', function(item, count
 		gumCore.Error("Player with CharID : "..charid.." \nSometing is wrong : "..id.." with transfering gold from storage")
 	end
 end)
-
-
 
 RegisterServerEvent('gum_inventory:transfer_weapon_to_storage')
 AddEventHandler('gum_inventory:transfer_weapon_to_storage', function(id_item, item, id)
@@ -573,7 +586,7 @@ AddEventHandler('gum_inventory:transfer_weapon_to_storage', function(id_item, it
 						new_table[tonumber(_source)] = json.decode(v2)
 						table.insert(new_table[tonumber(_source)], {item=id_item, name=item})
 						if tostring(id) ~= '0' then
-							gumCore.Debug("Player with ID : "..charid.." \nTransfer weapon to storage : "..id)
+							gumCore.Debug("Player with ID : "..charid.." Transfer weapon to storage : "..id)
 							exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 							function (result)
 								TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -587,6 +600,7 @@ AddEventHandler('gum_inventory:transfer_weapon_to_storage', function(id_item, it
 		gumCore.Debug("Player with : "..charid.." \nSomething is wrong with transfering weapon to storage "..id)
 	end
 end)
+
 RegisterServerEvent('gum_inventory:transfer_weapon_from_storage')
 AddEventHandler('gum_inventory:transfer_weapon_from_storage', function(item, id)
 	local _source = source
@@ -609,7 +623,7 @@ AddEventHandler('gum_inventory:transfer_weapon_from_storage', function(item, id)
 									end
 								end
 								if tostring(id) ~= '0' then
-									gumCore.Debug("Player with ID : ".._source.." \nTransfer weapon from storage : "..id)
+									gumCore.Debug("Player with ID : ".._source.." Transfer weapon from storage : "..id)
 									exports.ghmattimysql:execute("UPDATE inventory_storage SET items = @items WHERE identifier = @identifier", {['identifier'] = id, ['items'] = json.encode(new_table[tonumber(_source)])},
 									function (result)
 										TriggerEvent("gum_inventory:get_storage_srv", tonumber(_source), id)
@@ -628,54 +642,39 @@ AddEventHandler('gum_inventory:transfer_weapon_from_storage', function(item, id)
 		gumCore.Debug("Player with : "..charid.." \nSomething is wrong with transfering weapon from storage "..id)
 	end
 end)
-Citizen.CreateThread(function()
-	Citizen.Wait(1000)
-	itm_table = Inventory.preload_itemtable()
-	wpn_table = Inventory.preload_weapontable()
-end)
 
 RegisterServerEvent('gum_inventory:get_items')
 AddEventHandler('gum_inventory:get_items', function()
 	local _source = source
-	local User = gumCore.getUser(source)
+	local User = gumCore.getUser(_source)
 	if User ~= nil then
 		openstorages[_source] = {}
 		local Character = User.getUsedCharacter
 		local identifier = Character.identifier
 		local charid = Character.charIdentifier
-		exports.ghmattimysql:execute('SELECT inventory FROM characters WHERE identifier=@identifier and charidentifier=@charidentifier' , {["identifier"]=identifier,["charidentifier"]=charid}, function(result)
-			if result ~= nil then
-				itm_table = Inventory.check_itemtable()
-				wpn_table = Inventory.check_weapontable()
-				for k,v in pairs(result) do
-					for k2,v2 in pairs(v) do
-						inv_table[tonumber(_source)] = json.decode(v2)
-					end
-				end
+		exports.ghmattimysql:execute('SELECT inventory FROM characters WHERE identifier=@identifier and charidentifier=@charidentifier' , {["identifier"]=identifier,["charidentifier"]=charid}, function(resultInventory)
+			if resultInventory[1] ~= nil then
+				inv_table[tonumber(_source)] = json.decode(resultInventory[1].inventory)
 				inventory_table_sended[tonumber(_source)] = {}
-				for k,v in pairs(itm_table) do
-					for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-						if v.item == v2.item then
-							table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-						end
+				for a,b in pairs(inv_table[tonumber(_source)]) do
+					if itemTableForData[b.item] ~= nil then
+						table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId)})
 					end
 				end
 				exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result)
-					if result[1] ~= nil then
-						in_inventory_weapons[tonumber(_source)] = 0
+					if result ~= nil then
 						weapon_table[tonumber(_source)]  = {}
-						for k,v in pairs(result) do
-							in_inventory_weapons[tonumber(_source)] = k
-							for k2,v2 in pairs(wpn_table) do
-								if v2.item == v.name then
-									table.insert(weapon_table[tonumber(_source)], {id=v.id, name=v.name, label=v2.label, ammo=v.ammo, used=v.used, comps=v.comps, dirtlevel=v.dirtlevel, conditionlevel=v.conditionlevel})
-								end
+						for a,b in pairs(result) do
+							if weaponTableForData[b.name] ~= nil then
+								table.insert(weapon_table[tonumber(_source)], {id=b.id, name=b.name, label=weaponTableForData[b.name].label, ammo=b.ammo, used=b.used, comps=b.comps, dirtlevel=b.dirtlevel, conditionlevel=b.conditionlevel})
 							end
 						end
+						in_inventory_weapons[tonumber(_source)] = #weapon_table[tonumber(_source)]
 						TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], weapon_table[tonumber(_source)], itm_table, wpn_table)
 					else
+						weapon_table[tonumber(_source)] = {}
 						in_inventory_weapons[tonumber(_source)] = 0
-						TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], {}, itm_table, wpn_table)
+						TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], weapon_table[tonumber(_source)], itm_table, wpn_table)
 					end
 				end)
 			end
@@ -713,41 +712,25 @@ AddEventHandler('gum_inventory:get_items_sec', function(source)
 	local identifier = Character.identifier
 	local charid = Character.charIdentifier
 
-	exports.ghmattimysql:execute('SELECT inventory FROM characters WHERE identifier=@identifier and charidentifier=@charidentifier' , {["identifier"]=identifier,["charidentifier"]=charid}, function(result)
-		if result ~= nil then
-			for k,v in pairs(result) do
-				for k2,v2 in pairs(v) do
-					inv_table[tonumber(_source)] = json.decode(v2)
-				end
-			end
+	exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result2)
+		if result2[1] ~= nil then
+			in_inventory_weapons[tonumber(_source)] = 0
+			weapon_table[tonumber(_source)]  = {}
 			inventory_table_sended[tonumber(_source)] = {}
-			for k,v in pairs(itm_table) do
-				for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-					if v.item == v2.item then
-						table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-					end
+			for a,b in pairs(result2) do
+				if weaponTableForData[b.name] ~= nil then
+					table.insert(weapon_table[tonumber(_source)], {id=b.id, name=b.name, label=weaponTableForData[b.name].label, ammo=b.ammo, used=b.used, comps=b.comps, dirtlevel=b.dirtlevel, conditionlevel=b.conditionlevel})
 				end
 			end
-			exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result2)
-				if result2[1] ~= nil then
-					in_inventory_weapons[tonumber(_source)] = 0
-					weapon_table[tonumber(_source)] = {}
-					for k,v in pairs(result2) do
-						in_inventory_weapons[tonumber(_source)] = k
-						for k2,v2 in pairs(wpn_table) do
-							if v2.item == v.name then
-								table.insert(weapon_table[tonumber(_source)], {id=v.id, name=v.name, label=v2.label, ammo=v.ammo, used=v.used, comps=v.comps, dirtlevel=v.dirtlevel, conditionlevel=v.conditionlevel})
-							end
-						end
-					end
-					TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], weapon_table[tonumber(_source)], itm_table, wpn_table)
-				else
-					weapon_table[tonumber(_source)] = {}
-					TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], {}, itm_table, wpn_table)
-				end
-			end)
+			in_inventory_weapons[tonumber(_source)] = #weapon_table[tonumber(_source)]
+			updateItemsInventory(tonumber(_source))
+		else
+			weapon_table[tonumber(_source)] = {}
+			inventory_table_sended[tonumber(_source)] = {}
+			updateItemsInventory(tonumber(_source))
 		end
 	end)
+
 end)
 
 RegisterServerEvent('gumCore:addItem')
@@ -764,29 +747,16 @@ AddEventHandler('gumCore:addItem', function(source, name, count, metaDataData, p
 	in_inventory[tonumber(_source)] = 0
 	in_inventory_count[tonumber(_source)] = 0
 	for k,v in pairs(inv_table[tonumber(_source)]) do
-		for k2,v2 in pairs(itm_table) do
-			if v.item == v2.item then
-				in_inventory[tonumber(_source)] = v.count*v2.limit+in_inventory[tonumber(_source)]
-			end
-			if v2.item == name then
-				in_inventory_count[tonumber(_source)] = count*v2.limit
-			end
+		if v.item == name then
+			counter = k
+			in_inventory[tonumber(_source)] = v.count*itemTableForData[name].limit+in_inventory[tonumber(_source)]
+			in_inventory_count[tonumber(_source)] = count*itemTableForData[name].limit
 		end
 	end
-	for k2,v2 in pairs(itm_table) do
-		if v2.item == name then
-			count_calc[_source] = count*v2.limit
-		end
-	end
+	count_calc[_source] = count*itemTableForData[name].limit
 	if in_inventory[tonumber(_source)] == nil then
 		in_inventory[tonumber(_source)] = 0
 	end
-	for k,v in pairs(inv_table[tonumber(_source)]) do
-		if v.item == name then
-			counter = k
-		end
-	end
-
 	if playerBackup ~= nil then
 		if tonumber(in_inventory[tonumber(_source)]+in_inventory_count[tonumber(_source)]) >= Config.Max_Items then
 			Inventory.addItem(tonumber(playerBackup), name, tonumber(count))
@@ -797,13 +767,17 @@ AddEventHandler('gumCore:addItem', function(source, name, count, metaDataData, p
 		if metaDataData ~= nil then
 			metaData = metaDataData
 			for i=1, count do
+				local randomId = math.random(1,99999999999999)
 				table.insert(inv_table[tonumber(_source)], {itemId=randomId, item=name, count=1, metaData=metaData})
 			end
+			updateItemsInventory(_source)
 		else
 			if counter == 0 then
 				table.insert(inv_table[tonumber(_source)], {itemId=randomId, item=name, count=math.floor(count), metaData={}})
+				updateItemsInventory(_source)
 			else
 				inv_table[tonumber(_source)][counter].count = math.floor(inv_table[tonumber(_source)][counter].count+count)
+				updateItemsInventory(_source)
 			end
 		end
 	else
@@ -814,32 +788,85 @@ AddEventHandler('gumCore:addItem', function(source, name, count, metaDataData, p
 		if metaDataData ~= nil then
 			metaData = metaDataData
 			for i=1, count do
+				local randomId = math.random(1,99999999999999)
 				table.insert(inv_table[tonumber(_source)], {itemId=randomId, item=name, count=1, metaData=metaData})
 			end
+			updateItemsInventory(_source)
 		else
 			if counter == 0 then
 				table.insert(inv_table[tonumber(_source)], {itemId=randomId, item=name, count=math.floor(count), metaData={}})
+				updateItemsInventory(_source)
 			else
 				inv_table[tonumber(_source)][counter].count = math.floor(inv_table[tonumber(_source)][counter].count+count)
+				updateItemsInventory(_source)
 			end
 		end
 	end
+end)
 
-	exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier = @charidentifier", {['identifier'] = identifier, ['charidentifier']=CharIdentifier, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
- 	function (result)
-		inventory_table_sended[tonumber(_source)] = {}
-		for k,v in pairs(itm_table) do
-			for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-				if v.item == v2.item then
-					table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-				end
+Citizen.CreateThread(function()
+	Citizen.Wait(2000)
+	loadPreTable()
+	while true do
+		for _, playerId in ipairs(GetPlayers()) do
+			local _source = playerId
+			if canSaveInventory[tonumber(_source)] == true then
+				local User = gumCore.getUser(tonumber(_source))
+				local Character = User.getUsedCharacter
+				local identifier = Character.identifier
+				local CharIdentifier = Character.charIdentifier
+				exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier = @charidentifier", {['identifier'] = identifier, ['charidentifier']=CharIdentifier, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
+				function (result)
+					canSaveInventory[tonumber(_source)] = false
+					gumCore.Debug("[Inventory] CharIdentifier : "..CharIdentifier.." inventory has been saved!")
+				end)
+				Citizen.Wait(100)
 			end
 		end
-		if weapon_table[tonumber(_source)] == nil then
-			weapon_table[tonumber(_source)] = {}
+		Citizen.Wait(10000)
+	end
+end)
+
+function loadPreTable()
+	itm_table = Inventory.preload_itemtable()
+	wpn_table = Inventory.preload_weapontable()
+	for a,b in pairs(itm_table) do
+		itemTableForData[b.item] = {item=b.item, label=b.label, limit=b.limit, can_remove=b.can_remove, type=b.type, usable=b.usable, descriptions=b.descriptions, metadata=b.metadata}
+	end
+	for a,b in pairs(wpn_table) do
+		weaponTableForData[b.item] = {item=b.item, label=b.label}
+	end
+end
+
+function updateItemsInventory(_source)
+	local User = gumCore.getUser(tonumber(_source))
+	local Character = User.getUsedCharacter
+	local identifier = Character.identifier
+	local CharIdentifier = Character.charIdentifier
+
+	inventory_table_sended[tonumber(_source)] = {}
+	for a,b in pairs(inv_table[tonumber(_source)]) do
+		if itemTableForData[b.item] ~= nil then
+			table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId)})
 		end
-		TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], nil, itm_table, wpn_table)
-	end)
+	end
+	Citizen.Wait(50)
+	TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], weapon_table[tonumber(_source)], itm_table, wpn_table)
+	canSaveInventory[tonumber(_source)] = true
+end
+
+AddEventHandler('playerDropped', function (reason)
+	local _source = source
+	if canSaveInventory[tonumber(_source)] == true then
+		local User = gumCore.getUser(tonumber(_source))
+		local Character = User.getUsedCharacter
+		local identifier = Character.identifier
+		local CharIdentifier = Character.charIdentifier
+		exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier = @charidentifier", {['identifier'] = identifier, ['charidentifier']=CharIdentifier, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
+		function (result)
+			gumCore.Debug("[Inventory] Player drop and CharIdentifier : "..CharIdentifier.." inventory has been saved!")
+		end)
+	end
 end)
 
 RegisterServerEvent('gumCore:subItem')
@@ -849,7 +876,7 @@ AddEventHandler('gumCore:subItem', function(source, name, count)
 	local Character = User.getUsedCharacter
 	local identifier = Character.identifier
 	local charid = Character.charIdentifier
-	for k,v in pairs(inv_table[_source]) do
+	for k,v in pairs(inv_table[tonumber(_source)]) do
 		if v.item == name then
 			counter = k
 		end
@@ -857,24 +884,11 @@ AddEventHandler('gumCore:subItem', function(source, name, count)
 	if inv_table[tonumber(_source)][counter] ~= nil and count ~= nil then
 		if inv_table[tonumber(_source)][counter].count-tonumber(count) < 1 then
 			table.remove(inv_table[tonumber(_source)], tonumber(counter))
+			updateItemsInventory(_source)
 		else
 			inv_table[tonumber(_source)][counter].count = inv_table[tonumber(_source)][counter].count-tonumber(count)
+			updateItemsInventory(_source)
 		end
-		exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier=@charidentifier", {['identifier'] = identifier,["charidentifier"]=charid, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
-		function (result)
-			inventory_table_sended[tonumber(_source)] = {}
-			for k,v in pairs(itm_table) do
-				for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-					if v.item == v2.item then
-						table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-					end
-				end
-			end
-			if weapon_table[tonumber(_source)] == nil then
-				weapon_table[tonumber(_source)] = {}
-			end
-			TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], nil, itm_table, wpn_table)
-		end)
 	else
 		gumCore.Error("Someting is wrong with items.")
 	end
@@ -888,37 +902,22 @@ AddEventHandler('gumCore:subItemByID', function(source, itemId, count)
 	local Character = User.getUsedCharacter
 	local identifier = Character.identifier
 	local charid = Character.charIdentifier
-	local counter = 0
-	for k,v in pairs(inv_table[_source]) do
-		if tonumber(v.itemId) == tonumber(itemId) then
-			counter = k
+	local positionId = 0
+	for a,b in pairs(inv_table[tonumber(_source)]) do
+		if tonumber(b.itemId) == tonumber(itemId) then
+			positionId = a
 		end
 	end
-	if inv_table[tonumber(_source)] ~= nil then
-		if inv_table[tonumber(_source)][counter] ~= nil or count ~= nil then
-			if inv_table[tonumber(_source)][counter].count-tonumber(count) < 1 then
-				table.remove(inv_table[tonumber(_source)], tonumber(counter))
-			else
-				inv_table[tonumber(_source)][counter].count = inv_table[tonumber(_source)][counter].count-tonumber(count)
-			end
-			exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier=@charidentifier", {['identifier'] = identifier,["charidentifier"]=charid, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
-			function (result)
-				inventory_table_sended[tonumber(_source)] = {}
-				for k,v in pairs(itm_table) do
-					for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-						if v.item == v2.item then
-							table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-						end
-					end
-				end
-				if weapon_table[tonumber(_source)] == nil then
-					weapon_table[tonumber(_source)] = {}
-				end
-				TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], nil, itm_table, wpn_table)
-			end)
+	if positionId ~= 0 then
+		if inv_table[tonumber(_source)][positionId].count-tonumber(count) < 1 then
+			table.remove(inv_table[tonumber(_source)], tonumber(positionId))
+			updateItemsInventory(_source)
 		else
-			gumCore.Error("Someting is wrong with items.")
+			inv_table[tonumber(_source)][positionId].count = inv_table[tonumber(_source)][positionId].count-tonumber(count)
+			updateItemsInventory(_source)
 		end
+	else
+		updateItemsInventory(_source)
 	end
 end)
 
@@ -933,18 +932,7 @@ AddEventHandler('gumCore:editMetaDataByItemName', function(source, item, key, va
 	for a,b in pairs(inv_table[tonumber(_source)]) do
 		if b.item == item then
 			b.metaData[key] = value
-			exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier=@charidentifier", {['identifier'] = identifier,["charidentifier"]=charid, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
-			function (result)
-				inventory_table_sended[tonumber(_source)] = {}
-				for k,v in pairs(itm_table) do
-					for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-						if v.item == v2.item then
-							table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-						end
-					end
-				end
-				TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], nil, itm_table, wpn_table)
-			end)
+			updateItemsInventory(_source)
 			return false
 		end
 	end
@@ -962,43 +950,8 @@ AddEventHandler('gumCore:editMetaDataByID', function(source, id, key, value, cb)
 			b.metaData[key] = value
 		end
 	end
-	exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier=@charidentifier", {['identifier'] = identifier,["charidentifier"]=charid, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
-	function (result)
-		inventory_table_sended[tonumber(_source)] = {}
-		for k,v in pairs(itm_table) do
-			for k2,v2 in pairs(inv_table[tonumber(_source)]) do
-				if v.item == v2.item then
-					table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
-				end
-			end
-		end
-		if weapon_table[tonumber(_source)] == nil then
-			weapon_table[tonumber(_source)] = {}
-		end
-		TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], nil, itm_table, wpn_table)
-	end)
+	updateItemsInventory(_source)
 end)
-
--- RegisterServerEvent('gumCore:editMetaDataByItemName')
--- AddEventHandler('gumCore:editMetaDataByItemName', function(source, id, data, cb)
--- 	local _source = source
-
--- 	exports.ghmattimysql:execute("UPDATE characters SET inventory = @inventory WHERE identifier = @identifier and charidentifier=@charidentifier", {['identifier'] = identifier,["charidentifier"]=charid, ['inventory'] = json.encode(inv_table[tonumber(_source)])},
--- 	function (result)
--- 		inventory_table_sended[tonumber(_source)] = {}
--- 		for k,v in pairs(itm_table) do
--- 			for k2,v2 in pairs(inv_table[tonumber(_source)]) do
--- 				if v.item == v2.item then
--- 					table.insert(inventory_table_sended[tonumber(_source)], {item=v2.item, label=v.label, count=math.floor(v2.count), description=v.descriptions, usable=v.usable, limit=v.limit, metaData=v2.metaData, itemId=tonumber(v2.itemId)})
--- 				end
--- 			end
--- 		end
--- 		if weapon_table[tonumber(_source)] == nil then
--- 			weapon_table[tonumber(_source)] = {}
--- 		end
--- 		TriggerClientEvent("gum_inventory:send_list_inventory", tonumber(_source), inventory_table_sended[tonumber(_source)], weapon_table[tonumber(_source)], itm_table, wpn_table)
--- 	end)
--- end)
 
 RegisterServerEvent('gumCore:getMetadataValue')
 AddEventHandler('gumCore:getMetadataValue', function(source, item, data, cb)
@@ -1049,6 +1002,17 @@ AddEventHandler('gum_inventory:give_hand', function(target)
 	TriggerClientEvent("gum_inventory:send_hand", tonumber(target), tonumber(source), false)
 end)
 
+RegisterServerEvent('gum_inventory:hostage')
+AddEventHandler('gum_inventory:hostage', function(target, ped)
+	TriggerClientEvent("gum_inventory:hostage", tonumber(source), tonumber(target), true)
+	TriggerClientEvent("gum_inventory:hostage", tonumber(target), tonumber(source), false)
+end)
+
+RegisterServerEvent('gum_inventory:clearHostage')
+AddEventHandler('gum_inventory:clearHostage', function(target)
+	TriggerClientEvent("gum_inventory:clearHostage", tonumber(target))
+end)
+
 RegisterServerEvent('gum_inventory:send_state_weapon')
 AddEventHandler('gum_inventory:send_state_weapon', function(wepid, state)
 	local _source = source
@@ -1069,7 +1033,7 @@ AddEventHandler('gum_inventory:give_money', function(who_get, how_much, who_send
 	local Character = User.getUsedCharacter
 	local user_money = Character.money
 	local charid = Character.charIdentifier
-
+--
 	local User2 = gumCore.getUser(tonumber(who_get))
 	local Character2 = User2.getUsedCharacter
 	local user_money2 = Character2.money
@@ -1081,7 +1045,7 @@ AddEventHandler('gum_inventory:give_money', function(who_get, how_much, who_send
 		TriggerEvent("gum_inventory:get_items_sec", tonumber(who_send))
 		TriggerEvent("gum_inventory:get_items_sec", tonumber(who_get))
 		gumCore.Debug("CharIdentifier : "..charid.." give money to "..charid2.." : "..how_much.."$")
-		TriggerClientEvent("gum_notify:notify", tonumber(who_get), Config.Language[10].text, "You get : "..how_much.." $", 'bag', 3500)
+		TriggerClientEvent("gum_notify:notify", tonumber(who_get), Config.Language[10].text, "Dostal jsi : "..how_much.." $", 'bag', 3500)
 	else
 		TriggerClientEvent("gum_notify:notify", tonumber(source), Config.Language[10].text, Config.Language[40].text, 'bag', 2500)
 	end
@@ -1287,7 +1251,7 @@ AddEventHandler('gumCore:giveWeapon', function(source, weaponid, target)
 	local identifier = Character.identifier
 	local charid = Character.charIdentifier
 	exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result)
-		if result[1] ~= nil then
+		if result ~= nil then
 			in_inventory_weapons[tonumber(_source)] = 0
 			for k,v in pairs(result) do
 				in_inventory_weapons[tonumber(_source)] = k
@@ -1422,30 +1386,5 @@ AddEventHandler('gum_inventory:save_cleaning', function(name, cleaning)
 	local identifier = Character.identifier
 	local charid = Character.charIdentifier
 	local Parameters = {['identifier'] = identifier, ['charidentifier'] = charid, ['name'] = name, ['dirtlevel'] = tonumber(cleaning), ['conditionlevel'] = tonumber(cleaning) }
-	exports.ghmattimysql:execute("UPDATE loadout SET dirtlevel=@dirtlevel, conditionlevel=@conditionlevel WHERE identifier = @identifier AND charidentifier = @charidentifier AND name = @name AND used = 1", Parameters)
-end)
-
-
-RegisterServerEvent('gum_inventory:getWeaponTable')
-AddEventHandler('gum_inventory:getWeaponTable', function()
-	local _source = source
-	local User = gumCore.getUser(tonumber(_source))
-	local Character = User.getUsedCharacter
-	local identifier = Character.identifier
- 	local charid = Character.charIdentifier
-	exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result)
-		if result[1] ~= nil then
-			weapon_table[tonumber(_source)]  = {}
-			in_inventory_weapons[tonumber(_source)] = 0
-			for k,v in pairs(result) do
-				in_inventory_weapons[tonumber(_source)] = k
-				for k2,v2 in pairs(wpn_table) do
-					if v2.item == v.name then
-						table.insert(weapon_table[tonumber(_source)], {id=v.id, name=v.name, label=v2.label, ammo=v.ammo, used=v.used, comps=v.comps, dirtlevel=v.dirtlevel, conditionlevel=v.conditionlevel})
-					end
-				end
-			end
-			TriggerClientEvent("gum_inventory:getWeaponTable", tonumber(_source), weapon_table[tonumber(_source)])
-		end
-	end)
+	exports.ghmattimysql:execute("UPDATE loadout SET dirtlevel=@dirtlevel, conditionlevel=@conditionlevel WHERE identifier = @identifier AND charidentifier=@charidentifier AND name=@name AND used = 1", Parameters)
 end)

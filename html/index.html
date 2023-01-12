@@ -22,11 +22,11 @@
 <body>
   <div class="hotbar" id="hotbar">
     <div id="slot0"><div class="top-right">+</div></div>
-    <div id="slot1" onmouseover="show_hotbar(1)" onclick="clear_hotbar(1)"><div class="top-right">ě</div></div>
-    <div id="slot2" onmouseover="show_hotbar(2)" onclick="clear_hotbar(2)"><div class="top-right">š</div></div>
-    <div id="slot3" onmouseover="show_hotbar(3)" onclick="clear_hotbar(3)"><div class="top-right">č</div></div>
-    <div id="slot4" onmouseover="show_hotbar(4)" onclick="clear_hotbar(4)"><div class="top-right">ř</div></div>
-    <div id="slot5" onmouseover="show_hotbar(5)" onclick="clear_hotbar(5)"><div class="top-right">ž</div></div>
+    <div id="slot1" onclick="clear_hotbar(1)"><div class="top-right">ě</div></div>
+    <div id="slot2" onclick="clear_hotbar(2)"><div class="top-right">š</div></div>
+    <div id="slot3" onclick="clear_hotbar(3)"><div class="top-right">č</div></div>
+    <div id="slot4" onclick="clear_hotbar(4)"><div class="top-right">ř</div></div>
+    <div id="slot5"  onclick="clear_hotbar(5)"><div class="top-right">ž</div></div>
   </div>
   <div id="container">
       <h2 id="header" style="text-align:center"></h2>
@@ -53,11 +53,17 @@
       <div id ="btn_15" onmouseover="show_clothe(15)" onmouseout="clean_clothe()" onclick="put_clothe(15)"></div>
       <div id ="btn_16" onmouseover="show_clothe(16)" onmouseout="clean_clothe()" onclick="put_clothe(16)"></div>
       <div id ="btn_17" onmouseover="show_clothe(17)" onmouseout="clean_clothe()" onclick="put_clothe(17)"></div>
-      <div class="grid0" id="tableData"></div>
+
+    <table class="grid0" id="tableData">
+    </table>
+  
+  
+      <!-- <div class="grid0" id="tableData"></div> -->
 
       <div id ="id01"></div>
       <div id ="id02"></div>
       <div id ="show_weapons" onclick="Show_Weap()"></div>
+      <div id ="show_skills" onclick="showSkills()"></div>
   </div>
 
   <div id="container_other">
@@ -74,18 +80,27 @@
     <div class="grid2" id="playerData">
     </div>
     <div id="context-menu">
-      <div class="content_button" onclick="GiveItem(document.getElementById('input_size1').value)" >Darovat <input type="text" value = "1" id="input_size1"></div>
+      <div class="content_button" onclick="transferItem()"><center>Darovat</center></div>
+      <div class="content_button" onclick="show_hotbar(document.getElementById('input_size1').value)" >Hotbar <input type="text" value = "1" id="input_size1"></div>
       <div class="content_button" onclick="DropItem(document.getElementById('input_size2').value)" >Zahodit <input type="text" value = "1" id="input_size2"></div>
   </div>
   <div id="input_data">
-    <div id="input_text">How much items you need transfer?</div>
-    <div id="button1" onclick="transferOneItem()"><center>1 item</center></div>
-    <div id="button2" onclick="transferAllItem()"><center>All</center></div>
-    <div id="button3" onclick="transferAcceptItem()"><center>Accept</center></div>
-    <div id="button4" onclick="transferLeaveItem()"><center>Leave</center></div>
+    <div id="input_text">Kolik věcí chceš přesunout?</div>
+    <div id="button1" onclick="transferOneItem()"><center>1 kus</center></div>
+    <div id="button2" onclick="transferAllItem()"><center>Vše</center></div>
+    <div id="button3" onclick="transferAcceptItem()"><center>Potvrdit</center></div>
+    <div id="button4" onclick="transferLeaveItem()"><center>Odejít</center></div>
     <input type="inputType" id="input_type">
-  </div>
+    </div>
   <script>
+
+
+
+
+
+
+
+
   $('input').click(function(){return false;});
 
   function filterTextInput() {
