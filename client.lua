@@ -247,10 +247,14 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 										emptyMetadata = true
 									end
 								end
-								if emptyMetadata == true then
-									TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+								if math.type(tonumber(transferCount)) == "integer" then 
+									if emptyMetadata == true then
+										TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+									else
+										TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, nil)
+									end
 								else
-									TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, nil)
+									exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[47].text, 'money', 2000)
 								end
 							else
 								Show_Other(true, id_container, storage_table, money_state, size)
@@ -376,10 +380,14 @@ RegisterNUICallback('transfer_to_storage', function(data, cb)
 															emptyMetadata = true
 														end
 													end
-													if emptyMetadata == true then
-														TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+													if math.type(tonumber(transferCount)) == "integer" then 
+														if emptyMetadata == true then
+															TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, data.metaData)
+														else
+															TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, nil)
+														end
 													else
-														TriggerServerEvent("gum_inventory:transfer_item_to_storage", data.item, transferCount, id_container, data.itemId, nil)
+														exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[47].text, 'money', 2000)
 													end
 												else
 													Show_Other(true, id_container, storage_table, money_state, size)
@@ -1337,49 +1345,49 @@ end)
 
 RegisterNUICallback('put_clothe', function(data, cb)
 	if tonumber(data.clothe) == 1 then--Klobouk
-		ExecuteCommand("klobouk")
+		ExecuteCommand("hats")
 	elseif tonumber(data.clothe) == 2 then--Brýle
-		ExecuteCommand("bryle")
+		ExecuteCommand("glasses")
 	elseif tonumber(data.clothe) == 3 then--Masku
-		ExecuteCommand("maska")
+		ExecuteCommand("mask")
 	elseif tonumber(data.clothe) == 4 then--Bandana
 		ExecuteCommand("bandana")
 	elseif tonumber(data.clothe) == 5 then--Kravata,šátek
-		ExecuteCommand("satek")
-		ExecuteCommand("kravata")
+		ExecuteCommand("scarf")
+		ExecuteCommand("tie")
 	elseif tonumber(data.clothe) == 6 then--Plášť pončo
-		ExecuteCommand("plast")
+		ExecuteCommand("plastic")
 		ExecuteCommand("poncho")
 	elseif tonumber(data.clothe) == 7 then--Košile
-		ExecuteCommand("kosile")
+		ExecuteCommand("shirt")
 	elseif tonumber(data.clothe) == 8 then--Vesta
-		ExecuteCommand("vesta")
+		ExecuteCommand("vest")
 	elseif tonumber(data.clothe) == 9 then--kabát
-		ExecuteCommand("kabat")
+		ExecuteCommand("coat")
 	elseif tonumber(data.clothe) == 10 then--Pásy,Doplnky,Brašny
-		ExecuteCommand("brasny")
-		ExecuteCommand("pasy")
+		ExecuteCommand("bags")
+		ExecuteCommand("accessories")
 	elseif tonumber(data.clothe) == 11 then--Prsteny
-		ExecuteCommand("prsteny")
+		ExecuteCommand("rings")
 	elseif tonumber(data.clothe) == 12 then--Rukavice
-		ExecuteCommand("rukavice")
+		ExecuteCommand("glove")
 	elseif tonumber(data.clothe) == 13 then--Nátepníky
-		ExecuteCommand("natepniky")
+		ExecuteCommand("gauntlets")
 	elseif tonumber(data.clothe) == 14 then--Belt
-		ExecuteCommand("opasek")
-		ExecuteCommand("pdoplnek")
-		ExecuteCommand("pouzdro")
-		ExecuteCommand("druhepouzdro")
+		ExecuteCommand("belt")
+		ExecuteCommand("holster")
+		ExecuteCommand("secondholster")
+		ExecuteCommand("ammobelt")
 	elseif tonumber(data.clothe) == 15 then--Kšandy
-		ExecuteCommand("ksandy")
+		ExecuteCommand("suspenders")
 	elseif tonumber(data.clothe) == 16 then--Kalhoty,Chaps,Kšandy
-		ExecuteCommand("kalhoty")
+		ExecuteCommand("pant")
 		ExecuteCommand("chaps")
 		ExecuteCommand("kamase")
-		ExecuteCommand("sukne")
+		ExecuteCommand("skirt")
 	elseif tonumber(data.clothe) == 17 then--Boty
-		ExecuteCommand("boty")
-		ExecuteCommand("ostruhy")
+		ExecuteCommand("boots")
+		ExecuteCommand("spats")
 	end
 end)
 
@@ -1778,12 +1786,17 @@ Citizen.CreateThread(function()
 												emptyMetadata = true
 											end
 										end
-										if emptyMetadata == true then
-											TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count, v.metaData)
+										if math.type(tonumber(v.count)) == "integer" then 
+											if emptyMetadata == true then
+												TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count, v.metaData)
+											else
+												TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count)
+											end
+
+											Citizen.Wait(1000)
 										else
-											TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count)
+											exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[47].text, 'money', 2000)
 										end
-										Citizen.Wait(1000)
 									end
 								else
 									if v.item == "money" then
