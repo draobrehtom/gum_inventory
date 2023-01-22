@@ -437,11 +437,11 @@ end)
 RegisterNetEvent("gum:SelectedCharacter")
 AddEventHandler("gum:SelectedCharacter", function(charid)
 	Citizen.CreateThread(function() 
-		Citizen.Wait(3000)
+		Citizen.Wait(500)
 		TriggerServerEvent("gum_inventory:get_items")
 		Citizen.Wait(500)
 		TriggerServerEvent("gum_inventory:get_money")
-		Citizen.Wait(3000)
+		Citizen.Wait(2000)
 		equip_weapon_login()
 		Button_Prompt()
 	end)
@@ -1156,7 +1156,7 @@ end)
 function equip_weapon_login()
 	local login_continue = false
 	RemoveAllWeapons()
-	Citizen.Wait(500)
+	Citizen.Wait(100)
 	addWardrobeInventoryItem("CLOTHING_ITEM_M_OFFHAND_000_TINT_004", 0xF20B6B4A);
 	addWardrobeInventoryItem("UPGRADE_OFFHAND_HOLSTER", 0x39E57B01);
 	for k,v in pairs(weapon_table) do
@@ -1219,7 +1219,7 @@ function equip_weapon_login()
 		end
 	end
 	RemoveAllWeapons()
-	Citizen.Wait(2000)
+	Citizen.Wait(1000)
 	ClearPedTasks(PlayerPedId())
 	for k,v in pairs(weapon_table) do
 		if v.used == 1 then
