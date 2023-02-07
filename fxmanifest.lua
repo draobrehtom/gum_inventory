@@ -33,6 +33,7 @@ files {
   'html/crock.ttf',
   'html/animation.min.css',
   'html/images/*.png',
+  'html/images/filter/*.png',
   'html/images/items/*.png',
   'html/images/clothe/*.png',
 }

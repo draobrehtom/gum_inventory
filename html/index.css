@@ -69,8 +69,8 @@
      transform: translate(-50%, -50%);
      width: 400px;
      max-height: 401px;
-     height: 550px;
-     max-height: 581px;
+     height: 620px;
+     max-height: 621px;
      background-image: url('images/background.png');
      background-size: 100% 100%;
      animation: fadeIn;
@@ -979,7 +979,16 @@ th {
     border-style: ridge;
     border-color: rgba(255, 255, 255, 0.9);
   }
-  
+  #header {
+    position: absolute;
+    top: 5px;
+    left: 15px;
+    width: 86%;
+    height: 60px;
+    padding-top: 30px;
+    font-size: 30px;
+    justify-content: center;
+  }
   #context-menu.visible {
     transform: scale(1);
     transition: transform 200ms ease-in-out;
@@ -999,7 +1008,7 @@ th {
   
   #show_weapons {
     position: absolute;
-	top: 125px;
+	top: 140px;
 	right: 10%;
     width: 50px;
     height: 50px;
@@ -1010,7 +1019,7 @@ th {
 }
 #show_weapons:hover {
     position: absolute;
-	top: 125px;
+	top: 140px;
 	right: 10%;
     width: 50px;
     height: 50px;
@@ -1022,7 +1031,7 @@ th {
 
 #show_skills {
     position: absolute;
-	top: 125px;
+	top: 140px;
 	right: 25%;
     width: 50px;
     height: 50px;
@@ -1033,11 +1042,213 @@ th {
 }
 #show_skills:hover {
     position: absolute;
-	top: 125px;
+	top: 140px;
 	right: 25%;
     width: 50px;
     height: 50px;
     background-image: url('images/showSkillsa.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+
+
+#filterAllItem {
+    position: absolute;
+	top: 97px;
+	left: 5%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allItems.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllEat {
+    position: absolute;
+	top: 97px;
+	left: 15%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allEat.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllDrink {
+    position: absolute;
+	top: 97px;
+	left: 25%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allDrink.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllHerb {
+    position: absolute;
+	top: 97px;
+	left: 35%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allHerb.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllCraft {
+    position: absolute;
+	top: 97px;
+	left: 45%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allCraft.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllValuable {
+    position: absolute;
+	top: 97px;
+	left: 55%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allValuable.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllHorse {
+    position: absolute;
+	top: 97px;
+	left: 65%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allHorse.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllBuild {
+    position: absolute;
+	top: 97px;
+	left: 75%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allBuild.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllTrash {
+    position: absolute;
+	top: 97px;
+	left: 85%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allTrash.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+
+
+#filterAllItem:hover {
+    position: absolute;
+	top: 97px;
+	left: 5%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allItemsH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllEat:hover {
+    position: absolute;
+	top: 97px;
+	left: 15%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allEatH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllDrink:hover {
+    position: absolute;
+	top: 97px;
+	left: 25%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allDrinkH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllHerb:hover {
+    position: absolute;
+	top: 97px;
+	left: 35%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allHerbH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllCraft:hover {
+    position: absolute;
+	top: 97px;
+	left: 45%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allCraftH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllValuable:hover {
+    position: absolute;
+	top: 97px;
+	left: 55%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allValuableH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllHorse:hover {
+    position: absolute;
+	top: 97px;
+	left: 65%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allHorseH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllBuild:hover {
+    position: absolute;
+	top: 97px;
+	left: 75%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allBuildH.png');
+    background-size: 100% 100%;
+    background-color: transparent;
+    background-repeat: no-repeat;
+}
+#filterAllTrash:hover {
+    position: absolute;
+	top: 97px;
+	left: 85%;
+    width: 40px;
+    height: 40px;
+    background-image: url('images/filter/allTrashH.png');
     background-size: 100% 100%;
     background-color: transparent;
     background-repeat: no-repeat;

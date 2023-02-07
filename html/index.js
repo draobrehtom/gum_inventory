@@ -315,8 +315,8 @@ function money_update(money){
 function loadTableData(table_inv, money, wtable_inv, gold) {
     const tableBody = document.getElementById('tableData');
     let dataHtml = '';
-    dataHtml += '<div class="item"><div id="money" class="item-content" " onMouseOver="change_name(-1)"  ondblclick="UseItem(money)"><img src="images/items/money.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_money">'+Math.round(money * 100)/100+'$</div></div></div>'
-    dataHtml += '<div class="item"><div id="gold" class="item-content" " onMouseOver="change_name(-2)"  ondblclick="UseItem(gold)"><img src="images/items/gold.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_gold">'+Math.round(gold * 100)/100+'</div></div></div>'
+    dataHtml += '<div class="item" data-content="money"><div id="money" class="item-content" " onMouseOver="change_name(-1)"  ondblclick="UseItem(money)"><img src="images/items/money.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_money">'+Math.round(money * 100)/100+'$</div></div></div>'
+    dataHtml += '<div class="item" data-content="gold"><div id="gold" class="item-content" " onMouseOver="change_name(-2)"  ondblclick="UseItem(gold)"><img src="images/items/gold.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_gold">'+Math.round(gold * 100)/100+'</div></div></div>'
     count_inventory = 0
     count_winventory = 0
     for (var i in table_inv) {
@@ -330,20 +330,20 @@ function loadTableData(table_inv, money, wtable_inv, gold) {
             }
         }
         if (durabilityValue !== 0) {
-            dataHtml += '<div class="item"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/' + table_inv[i].item + '.png" width="60" height="60"  id="item"><progress id="progress" max="100" value="'+durabilityValue+'">TEST</progress><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
+            dataHtml += '<div class="item" data-content="'+table_inv[i].category+'"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/' + table_inv[i].item + '.png" width="60" height="60"  id="item"><progress id="progress" max="100" value="'+durabilityValue+'">TEST</progress><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
         } else {
             var image_url = 'nui://gum_inventory/html/images/items/' + table_inv[i].item + '.png';
             if (doesFileExist(image_url) == "yes") {
-                dataHtml += '<div class="item"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/' + table_inv[i].item + '.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
+                dataHtml += '<div class="item"  data-content="'+table_inv[i].category+'"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/' + table_inv[i].item + '.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
             } else {
-                dataHtml += '<div class="item"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/badItem.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
+                dataHtml += '<div class="item"  data-content="'+table_inv[i].category+'"><div id="'+ i +'" class="item-content" onMouseOver="change_name('+ i +')" ondblclick="UseItem('+i+')"><img src="images/items/badItem.png" width="60" height="60"  id="item"><div class="bottom-right" id="count_'+i+'">' + table_inv[i].count + '</br>'+Math.round(weight_item*100)/100+'kg</div></div></div>'
             }
 
         }
     }
     for (var i in wtable_inv) {
         count_winventory = count_winventory+1
-        dataHtml += '<div class="item"><div id="'+ i +'" class="item-content" onMouseOver="change_name_wep('+ i +')"  ondblclick="UseWeapon(\''+wtable_inv[i].id+'\',\''+wtable_inv[i].name+'\')"><img src="images/items/' + wtable_inv[i].name + '.png" width="60" height="60"  id="weapon"><div class="bottom-right" id="count_'+i+'"></div></div></div>'
+        dataHtml += '<div class="item" data-content="weapon"><div id="'+ i +'" class="item-content" onMouseOver="change_name_wep('+ i +')"  ondblclick="UseWeapon(\''+wtable_inv[i].id+'\',\''+wtable_inv[i].name+'\')"><img src="images/items/' + wtable_inv[i].name + '.png" width="60" height="60"  id="weapon"><div class="bottom-right" id="count_'+i+'"></div></div></div>'
     }
     tableBody.innerHTML = dataHtml
 }

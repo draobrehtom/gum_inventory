@@ -22,11 +22,11 @@
 <body>
   <div class="hotbar" id="hotbar">
     <div id="slot0"><div class="top-right">+</div></div>
-    <div id="slot1" onclick="clear_hotbar(1)"><div class="top-right">ě</div></div>
-    <div id="slot2" onclick="clear_hotbar(2)"><div class="top-right">š</div></div>
-    <div id="slot3" onclick="clear_hotbar(3)"><div class="top-right">č</div></div>
-    <div id="slot4" onclick="clear_hotbar(4)"><div class="top-right">ř</div></div>
-    <div id="slot5"  onclick="clear_hotbar(5)"><div class="top-right">ž</div></div>
+    <div id="slot1" onclick="clear_hotbar(1)"><div class="top-right">E</div></div>
+    <div id="slot2" onclick="clear_hotbar(2)"><div class="top-right">S</div></div>
+    <div id="slot3" onclick="clear_hotbar(3)"><div class="top-right">C</div></div>
+    <div id="slot4" onclick="clear_hotbar(4)"><div class="top-right">R</div></div>
+    <div id="slot5"  onclick="clear_hotbar(5)"><div class="top-right">Z</div></div>
   </div>
   <div id="container">
       <h2 id="header" style="text-align:center"></h2>
@@ -56,23 +56,28 @@
 
     <table class="grid0" id="tableData">
     </table>
-  
-  
-      <!-- <div class="grid0" id="tableData"></div> -->
-
       <div id ="id01"></div>
       <div id ="id02"></div>
       <div id ="show_weapons" onclick="Show_Weap()"></div>
       <div id ="show_skills" onclick="showSkills()"></div>
+      <div id ="filterAllItem" onclick="filterAllItem()"></div>
+      <div id ="filterAllEat" onclick="filterAllEat()"></div>
+      <div id ="filterAllDrink" onclick="filterAllDrink()"></div>
+      <div id ="filterAllHerb" onclick="filterAllHerb()"></div>
+      <div id ="filterAllCraft" onclick="filterAllCraft()"></div>
+      <div id ="filterAllValuable" onclick="filterAllValuable()"></div>
+      <div id ="filterAllHorse" onclick="filterAllHorse()"></div>
+      <div id ="filterAllBuild" onclick="filterAllBuild()"></div>
+      <div id ="filterAllTrash" onclick="filterAllTrash()"></div>
   </div>
 
   <div id="container_other">
-    <h2 id="header_container" style="text-align:center">Uložiště</h2>
+    <h2 id="header_container" style="text-align:center">Storage</h2>
 
     <div id ="id03"></div>
     <div class="grid_other" id="expand_container">
     </div>
-    <input id="myInput" type="text" onkeyup="filterTextInput()" placeholder="Hledej"/>
+    <input id="eatFilter" type="text" onchange="filterAllEat()"/>
     <div id ="id05"></div>
     <div id ="id08"></div>
   </div>
@@ -80,47 +85,212 @@
     <div class="grid2" id="playerData">
     </div>
     <div id="context-menu">
-      <div class="content_button" onclick="transferItem()"><center>Darovat</center></div>
+      <div class="content_button" onclick="transferItem()"><center>Give</center></div>
       <div class="content_button" onclick="show_hotbar(document.getElementById('input_size1').value)" >Hotbar <input type="text" value = "1" id="input_size1"></div>
-      <div class="content_button" onclick="DropItem(document.getElementById('input_size2').value)" >Zahodit <input type="text" value = "1" id="input_size2"></div>
+      <div class="content_button" onclick="DropItem(document.getElementById('input_size2').value)" >Throw away <input type="text" value = "1" id="input_size2"></div>
   </div>
   <div id="input_data">
-    <div id="input_text">Kolik věcí chceš přesunout?</div>
-    <div id="button1" onclick="transferOneItem()"><center>1 kus</center></div>
-    <div id="button2" onclick="transferAllItem()"><center>Vše</center></div>
-    <div id="button3" onclick="transferAcceptItem()"><center>Potvrdit</center></div>
-    <div id="button4" onclick="transferLeaveItem()"><center>Odejít</center></div>
+    <div id="input_text">How many things do you want to move??</div>
+    <div id="button1" onclick="transferOneItem()"><center>1 piece</center></div>
+    <div id="button2" onclick="transferAllItem()"><center>All</center></div>
+    <div id="button3" onclick="transferAcceptItem()"><center>Confirm</center></div>
+    <div id="button4" onclick="transferLeaveItem()"><center>Exit</center></div>
     <input type="inputType" id="input_type">
     </div>
   <script>
 
+function filterAllTrash() {
+  document.getElementById("eatFilter").value = "trash";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
+function filterAllBuild() {
+  document.getElementById("eatFilter").value = "build";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
+function filterAllHorse() {
+  document.getElementById("eatFilter").value = "horse";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
+function filterAllValuable() {
+  document.getElementById("eatFilter").value = "valuable";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
+function filterAllCraft() {
+  document.getElementById("eatFilter").value = "craft";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
+function filterAllHerb() {
+  document.getElementById("eatFilter").value = "herb";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
+
+function filterAllItem() {
+  document.getElementById("eatFilter").value = "";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
+
+function filterAllDrink() {
+  document.getElementById("eatFilter").value = "drink";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
+
+function filterAllEat() {
+  document.getElementById("eatFilter").value = "eat";
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("eatFilter");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
+	
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
+}
 
 
   $('input').click(function(){return false;});
 
   function filterTextInput() {
-  var input, radios, radio_filter, text_filter, td0, i, divList;
-  input = document.getElementById("myInput");
-  text_filter = input.value.toUpperCase();
-  divList = $(".item");
+    var input, radios, radio_filter, text_filter, td0, i, divList;
+    input = document.getElementById("myInput");
+    text_filter = input.value.toUpperCase();
+   divList = $(".item");
 	
- // Loop through all table rows, and hide those who don't match the search query
-  for (i = 0; i < divList.length; i++) {
-    td0 = divList[i].getAttribute('data-content');
-    if (td0) {
-      if (td0.toUpperCase().indexOf(text_filter) > -1) {
-        divList[i].style.display = "";
-      } else {
-        divList[i].style.display = "none";
-      }
-    } 
-  }
+    for (i = 0; i < divList.length; i++) {
+      td0 = divList[i].getAttribute('data-content');
+      if (td0) {
+        if (td0.toUpperCase().indexOf(text_filter) > -1) {
+          divList[i].style.display = "";
+        } else {
+          divList[i].style.display = "none";
+        }
+      } 
+    }
 }
+
 
   </script>
     <script src="./index.js" type="text/javascript"></script>

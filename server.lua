@@ -658,7 +658,7 @@ AddEventHandler('gum_inventory:get_items', function()
 				inventory_table_sended[tonumber(_source)] = {}
 				for a,b in pairs(inv_table[tonumber(_source)]) do
 					if itemTableForData[b.item] ~= nil then
-						table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId)})
+						table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId), category=itemTableForData[b.item].category})
 					end
 				end
 				exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result)
@@ -666,7 +666,7 @@ AddEventHandler('gum_inventory:get_items', function()
 						weapon_table[tonumber(_source)]  = {}
 						for a,b in pairs(result) do
 							if weaponTableForData[b.name] ~= nil then
-								table.insert(weapon_table[tonumber(_source)], {id=b.id, name=b.name, label=weaponTableForData[b.name].label, ammo=b.ammo, used=b.used, comps=b.comps, dirtlevel=b.dirtlevel, conditionlevel=b.conditionlevel})
+								table.insert(weapon_table[tonumber(_source)], {id=b.id, name=b.name, label=weaponTableForData[b.name].label, ammo=b.ammo, used=b.used, comps=b.comps, dirtlevel=b.dirtlevel, conditionlevel=b.conditionlevel, category=weaponTableForData[b.name].category})
 							end
 						end
 						in_inventory_weapons[tonumber(_source)] = #weapon_table[tonumber(_source)]
@@ -831,10 +831,10 @@ function loadPreTable()
 	itm_table = Inventory.preload_itemtable()
 	wpn_table = Inventory.preload_weapontable()
 	for a,b in pairs(itm_table) do
-		itemTableForData[b.item] = {item=b.item, label=b.label, limit=b.limit, can_remove=b.can_remove, type=b.type, usable=b.usable, descriptions=b.descriptions, metadata=b.metadata}
+		itemTableForData[b.item] = {item=b.item, label=b.label, limit=b.limit, can_remove=b.can_remove, type=b.type, usable=b.usable, descriptions=b.descriptions, metadata=b.metadata, category=b.category}
 	end
 	for a,b in pairs(wpn_table) do
-		weaponTableForData[b.item] = {item=b.item, label=b.label}
+		weaponTableForData[b.item] = {item=b.item, label=b.label, category="weapon"}
 	end
 end
 
@@ -847,7 +847,7 @@ function updateItemsInventory(_source)
 	inventory_table_sended[tonumber(_source)] = {}
 	for a,b in pairs(inv_table[tonumber(_source)]) do
 		if itemTableForData[b.item] ~= nil then
-			table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId)})
+			table.insert(inventory_table_sended[tonumber(_source)], {item=itemTableForData[b.item].item, label=itemTableForData[b.item].label, count=math.floor(b.count), description=itemTableForData[b.item].descriptions, usable=itemTableForData[b.item].usable, limit=itemTableForData[b.item].limit, metaData=b.metaData, itemId=tonumber(b.itemId), category=itemTableForData[b.item].category})
 		end
 	end
 	Citizen.Wait(50)
