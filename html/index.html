@@ -22,11 +22,11 @@
 <body>
   <div class="hotbar" id="hotbar">
     <div id="slot0"><div class="top-right">+</div></div>
-    <div id="slot1" onclick="clear_hotbar(1)"><div class="top-right">E</div></div>
-    <div id="slot2" onclick="clear_hotbar(2)"><div class="top-right">S</div></div>
-    <div id="slot3" onclick="clear_hotbar(3)"><div class="top-right">C</div></div>
-    <div id="slot4" onclick="clear_hotbar(4)"><div class="top-right">R</div></div>
-    <div id="slot5"  onclick="clear_hotbar(5)"><div class="top-right">Z</div></div>
+    <div id="slot1" onclick="clear_hotbar(1)"><div class="top-right">ě</div></div>
+    <div id="slot2" onclick="clear_hotbar(2)"><div class="top-right">š</div></div>
+    <div id="slot3" onclick="clear_hotbar(3)"><div class="top-right">č</div></div>
+    <div id="slot4" onclick="clear_hotbar(4)"><div class="top-right">ř</div></div>
+    <div id="slot5"  onclick="clear_hotbar(5)"><div class="top-right">ž</div></div>
   </div>
   <div id="container">
       <h2 id="header" style="text-align:center"></h2>
@@ -69,15 +69,16 @@
       <div id ="filterAllHorse" onclick="filterAllHorse()"></div>
       <div id ="filterAllBuild" onclick="filterAllBuild()"></div>
       <div id ="filterAllTrash" onclick="filterAllTrash()"></div>
-  </div>
+      <input id="eatFilter" type="text" onchange="filterAllEat()"/>
+    </div>
 
   <div id="container_other">
-    <h2 id="header_container" style="text-align:center">Storage</h2>
+    <h2 id="header_container" style="text-align:center">Uložiště</h2>
+    <input id="myInput" type="text" onchange="filterTextInput()"/>
 
     <div id ="id03"></div>
     <div class="grid_other" id="expand_container">
     </div>
-    <input id="eatFilter" type="text" onchange="filterAllEat()"/>
     <div id ="id05"></div>
     <div id ="id08"></div>
   </div>
@@ -85,16 +86,16 @@
     <div class="grid2" id="playerData">
     </div>
     <div id="context-menu">
-      <div class="content_button" onclick="transferItem()"><center>Give</center></div>
+      <div class="content_button" onclick="transferItem()"><center>Darovat</center></div>
       <div class="content_button" onclick="show_hotbar(document.getElementById('input_size1').value)" >Hotbar <input type="text" value = "1" id="input_size1"></div>
-      <div class="content_button" onclick="DropItem(document.getElementById('input_size2').value)" >Throw away <input type="text" value = "1" id="input_size2"></div>
+      <div class="content_button" onclick="DropItem(document.getElementById('input_size2').value)" >Zahodit <input type="text" value = "1" id="input_size2"></div>
   </div>
   <div id="input_data">
-    <div id="input_text">How many things do you want to move??</div>
-    <div id="button1" onclick="transferOneItem()"><center>1 piece</center></div>
-    <div id="button2" onclick="transferAllItem()"><center>All</center></div>
-    <div id="button3" onclick="transferAcceptItem()"><center>Confirm</center></div>
-    <div id="button4" onclick="transferLeaveItem()"><center>Exit</center></div>
+    <div id="input_text">Kolik věcí chceš přesunout?</div>
+    <div id="button1" onclick="transferOneItem()"><center>1 kus</center></div>
+    <div id="button2" onclick="transferAllItem()"><center>Vše</center></div>
+    <div id="button3" onclick="transferAcceptItem()"><center>Potvrdit</center></div>
+    <div id="button4" onclick="transferLeaveItem()"><center>Odejít</center></div>
     <input type="inputType" id="input_type">
     </div>
   <script>

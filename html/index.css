@@ -1006,7 +1006,7 @@ th {
     background: #343434;
   }
   
-  #show_weapons {
+#show_weapons {
     position: absolute;
 	top: 140px;
 	right: 10%;
@@ -1056,7 +1056,7 @@ th {
 #filterAllItem {
     position: absolute;
 	top: 97px;
-	left: 5%;
+	left: 15%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allItems.png');
@@ -1067,7 +1067,7 @@ th {
 #filterAllEat {
     position: absolute;
 	top: 97px;
-	left: 15%;
+	left: 23%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allEat.png');
@@ -1078,7 +1078,7 @@ th {
 #filterAllDrink {
     position: absolute;
 	top: 97px;
-	left: 25%;
+	left: 31%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allDrink.png');
@@ -1089,7 +1089,7 @@ th {
 #filterAllHerb {
     position: absolute;
 	top: 97px;
-	left: 35%;
+	left: 39%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allHerb.png');
@@ -1100,7 +1100,7 @@ th {
 #filterAllCraft {
     position: absolute;
 	top: 97px;
-	left: 45%;
+	left: 47%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allCraft.png');
@@ -1122,7 +1122,7 @@ th {
 #filterAllHorse {
     position: absolute;
 	top: 97px;
-	left: 65%;
+	left: 63%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allHorse.png');
@@ -1133,7 +1133,7 @@ th {
 #filterAllBuild {
     position: absolute;
 	top: 97px;
-	left: 75%;
+	left: 71%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allBuild.png');
@@ -1144,7 +1144,7 @@ th {
 #filterAllTrash {
     position: absolute;
 	top: 97px;
-	left: 85%;
+	left: 79%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allTrash.png');
@@ -1153,11 +1153,25 @@ th {
     background-repeat: no-repeat;
 }
 
+#eatFilter {
+    position: absolute;
+    background-color: transparent;
+    top:0;
+    left:0;
+    width: 0px;
+    max-width: 0px;
+    height: 0px;
+    max-height: 0px;
+    color: transparent;
+    border-color: transparent;
+    overflow: hidden;
+    outline: none;
+}
 
 #filterAllItem:hover {
     position: absolute;
 	top: 97px;
-	left: 5%;
+	left: 15%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allItemsH.png');
@@ -1168,7 +1182,7 @@ th {
 #filterAllEat:hover {
     position: absolute;
 	top: 97px;
-	left: 15%;
+	left: 23%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allEatH.png');
@@ -1179,7 +1193,7 @@ th {
 #filterAllDrink:hover {
     position: absolute;
 	top: 97px;
-	left: 25%;
+	left: 31%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allDrinkH.png');
@@ -1190,7 +1204,7 @@ th {
 #filterAllHerb:hover {
     position: absolute;
 	top: 97px;
-	left: 35%;
+	left: 39%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allHerbH.png');
@@ -1201,7 +1215,7 @@ th {
 #filterAllCraft:hover {
     position: absolute;
 	top: 97px;
-	left: 45%;
+	left: 47%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allCraftH.png');
@@ -1223,7 +1237,7 @@ th {
 #filterAllHorse:hover {
     position: absolute;
 	top: 97px;
-	left: 65%;
+	left: 63%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allHorseH.png');
@@ -1234,7 +1248,7 @@ th {
 #filterAllBuild:hover {
     position: absolute;
 	top: 97px;
-	left: 75%;
+	left: 71%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allBuildH.png');
@@ -1245,7 +1259,7 @@ th {
 #filterAllTrash:hover {
     position: absolute;
 	top: 97px;
-	left: 85%;
+	left: 79%;
     width: 40px;
     height: 40px;
     background-image: url('images/filter/allTrashH.png');
