@@ -182,11 +182,14 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 				if transferCount ~= nil then
 					if transferCount ~= 'close' and transferCount > 0 and tonumber(data.count) >= tonumber(transferCount) then
 						TriggerServerEvent("gum_inventory:transfer_money_from_storage", data.item, transferCount, id_container)
+						SendNUIMessage({type = "cleanTransfer"})
 					else
 						Show_Other(true, id_container, storage_table, money_state, size)
+						SendNUIMessage({type = "cleanTransfer"})
 					end
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
+					SendNUIMessage({type = "cleanTransfer"})
 				end
 			end
 		end)
@@ -203,11 +206,14 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 				if transferCount ~= nil then
 					if transferCount ~= 'close' and transferCount > 0 and tonumber(data.count) >= tonumber(transferCount) then
 						TriggerServerEvent("gum_inventory:transfer_gold_from_storage", data.item, transferCount, id_container)
+						SendNUIMessage({type = "cleanTransfer"})
 					else
 						Show_Other(true, id_container, storage_table, money_state, size)
+						SendNUIMessage({type = "cleanTransfer"})
 					end
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
+					SendNUIMessage({type = "cleanTransfer"})
 				end
 			end
 		end)
@@ -223,11 +229,14 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 					end
 					if emptyMetadata == true then
 						TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, 1, id_container, data.itemId, data.metaData)
+						SendNUIMessage({type = "cleanTransfer"})
 					else
 						TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, 1, id_container, data.itemId, nil)
+						SendNUIMessage({type = "cleanTransfer"})
 					end
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
+					SendNUIMessage({type = "cleanTransfer"})
 				end
 			else
 				SendNUIMessage({type = "input_data", status=true, count=data.count})
@@ -253,14 +262,17 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 									else
 										TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, nil)
 									end
+									SendNUIMessage({type = "cleanTransfer"})
 								else
 									exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[47].text, 'money', 2000)
 								end
 							else
 								Show_Other(true, id_container, storage_table, money_state, size)
+								SendNUIMessage({type = "cleanTransfer"})
 							end
 						else
 							Show_Other(true, id_container, storage_table, money_state, size)
+							SendNUIMessage({type = "cleanTransfer"})
 						end
 					end
 				end)
@@ -268,9 +280,11 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 		else
 			if data.used == 1 then
 				Show_Other(true, id_container, storage_table, money_state, size)
+				SendNUIMessage({type = "cleanTransfer"})
 				exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[7].text, 'pistol', 2000)
 			else
 				TriggerServerEvent("gum_inventory:transfer_weapon_from_storage", data.item, id_container)
+				SendNUIMessage({type = "cleanTransfer"})
 			end
 		end
 	end

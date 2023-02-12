@@ -39,11 +39,13 @@ var allCount = 0
 var giveItemEnabled = false
 var isInContext = false
 var canTransfer = false
+var blockMe = false
 
 $(document).keydown(function(e) {
     var close = 27,close2 = 66, presse=69, pressenter=13;
     switch (e.keyCode) {
         case close:
+            blockMe = false
             isInContext = false
             $.post('http://gum_inventory/exit', JSON.stringify({id:id_container}));
             contextMenu.classList.remove("visible");
@@ -64,6 +66,7 @@ $(document).keydown(function(e) {
             }
         break;
         case close2:
+            blockMe = false
             isInContext = false
             if (id_container == 0) {
                 $.post('http://gum_inventory/exit', JSON.stringify({id:id_container}));
@@ -87,6 +90,7 @@ $(document).keydown(function(e) {
         break;
         case pressenter:
             if (inInput) {
+                blockMe = false
                 $.post('http://gum_inventory/transferAcceptItem', JSON.stringify({count:document.getElementById("input_type").value}));
                 allCount = 0
                 document.getElementById("input_type").value = "";
@@ -234,6 +238,9 @@ $(function() {
         }
         if (item.type === "weapon_desc_update") {
             change_active_weapon(item.data_info)
+        }
+        if (item.type === "cleanTransfer") {
+            blockMe = false
         }
         if (item.type === "input_data") {
             if (item.status === true) {
@@ -439,14 +446,17 @@ function transferToPlayer() {
 }
 
 function transfer_from_storage() {
-    if (dragged_stor_inv == "money") {
-        $.post('http://gum_inventory/transfer_from_storage', JSON.stringify({ item: storage_inv[dragged_stor_inv].item, weapon: storage_inv[dragged_stor_inv].weapon, count: storage_inv[dragged_stor_inv].count, container_id:id_container }));
-    } else if (dragged_stor_inv == "gold") {
+    if (blockMe == false) {
+        blockMe = true
+        if (dragged_stor_inv == "money") {
             $.post('http://gum_inventory/transfer_from_storage', JSON.stringify({ item: storage_inv[dragged_stor_inv].item, weapon: storage_inv[dragged_stor_inv].weapon, count: storage_inv[dragged_stor_inv].count, container_id:id_container }));
-    } else {
-        $.post('http://gum_inventory/transfer_from_storage', JSON.stringify({ item: storage_inv[dragged_stor_inv].item, itemId: storage_inv[dragged_stor_inv].itemId, metaData: storage_inv[dragged_stor_inv].metaData, weapon: storage_inv[dragged_stor_inv].weapon, count: storage_inv[dragged_stor_inv].count, container_id:id_container, limit:storage_inv[dragged_stor_inv].limit, countInInventory:storage_inv[dragged_stor_inv].count }));
+        } else if (dragged_stor_inv == "gold") {
+                $.post('http://gum_inventory/transfer_from_storage', JSON.stringify({ item: storage_inv[dragged_stor_inv].item, weapon: storage_inv[dragged_stor_inv].weapon, count: storage_inv[dragged_stor_inv].count, container_id:id_container }));
+        } else {
+            $.post('http://gum_inventory/transfer_from_storage', JSON.stringify({ item: storage_inv[dragged_stor_inv].item, itemId: storage_inv[dragged_stor_inv].itemId, metaData: storage_inv[dragged_stor_inv].metaData, weapon: storage_inv[dragged_stor_inv].weapon, count: storage_inv[dragged_stor_inv].count, container_id:id_container, limit:storage_inv[dragged_stor_inv].limit, countInInventory:storage_inv[dragged_stor_inv].count }));
+        }
+        drag_to_normal = false
     }
-    drag_to_normal = false
 }//
 
 function loadstoragedata(strg_dt) {
