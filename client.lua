@@ -153,8 +153,11 @@ AddEventHandler('gum_inventory:refresh_storage', function(storage, itm, wpn,id)
 	end
 	Citizen.Wait(100)
 	Show_Other(true, id, storage_table, money_state, size)
-	Citizen.Wait(500)
+end)
+
+RegisterNUICallback('cancelBlock', function(data, cb)
 	blockSpamming = false
+	SendNUIMessage({type = "cleanTransfer"})
 end)
 
 RegisterNUICallback('hotbar_set', function(data, cb)
@@ -182,6 +185,7 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 		Citizen.CreateThread(function()
 			while waitForInteraction == nil do
 				if waitForInteraction == false then
+					blockSpamming = false
 					break 
 				end
 				Citizen.Wait(0)
@@ -190,25 +194,22 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 				if transferCount ~= nil then
 					if transferCount ~= 'close' and transferCount > 0 and tonumber(data.count) >= tonumber(transferCount) then
 						TriggerServerEvent("gum_inventory:transfer_money_from_storage", data.item, transferCount, id_container)
-						SendNUIMessage({type = "cleanTransfer"})
 					else
 						Show_Other(true, id_container, storage_table, money_state, size)
 						SendNUIMessage({type = "cleanTransfer"})
-						blockSpamming = false
 					end
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
 					SendNUIMessage({type = "cleanTransfer"})
-					blockSpamming = false
 				end
 			end
 		end)
 	elseif data.item == "gold" then
 		Citizen.CreateThread(function()
 			SendNUIMessage({type = "input_data", status=true, count=data.count})
-			blockSpamming = true
 			while waitForInteraction == nil do
 				if waitForInteraction == false then
+					blockSpamming = false
 					break 
 				end
 				Citizen.Wait(0)
@@ -217,16 +218,13 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 				if transferCount ~= nil then
 					if transferCount ~= 'close' and transferCount > 0 and tonumber(data.count) >= tonumber(transferCount) then
 						TriggerServerEvent("gum_inventory:transfer_gold_from_storage", data.item, transferCount, id_container)
-						SendNUIMessage({type = "cleanTransfer"})
 					else
 						Show_Other(true, id_container, storage_table, money_state, size)
 						SendNUIMessage({type = "cleanTransfer"})
-						blockSpamming = false
 					end
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
 					SendNUIMessage({type = "cleanTransfer"})
-					blockSpamming = false
 				end
 			end
 		end)
@@ -242,7 +240,6 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 					end
 					if emptyMetadata == true then
 						TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, 1, id_container, data.itemId, data.metaData)
-						SendNUIMessage({type = "cleanTransfer"})
 					else
 						TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, 1, id_container, data.itemId, nil)
 						SendNUIMessage({type = "cleanTransfer"})
@@ -250,14 +247,13 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 				else
 					Show_Other(true, id_container, storage_table, money_state, size)
 					SendNUIMessage({type = "cleanTransfer"})
-					blockSpamming = false
 				end
 			else
 				SendNUIMessage({type = "input_data", status=true, count=data.count})
-				blockSpamming = true
 				Citizen.CreateThread(function()
 					while waitForInteraction == nil do
 						if waitForInteraction == false then
+							blockSpamming = false
 							break 
 						end
 						Citizen.Wait(0)
@@ -277,19 +273,16 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 									else
 										TriggerServerEvent("gum_inventory:transfer_item_from_storage", data.item, transferCount, id_container, data.itemId, nil)
 									end
-									SendNUIMessage({type = "cleanTransfer"})
 								else
 									exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[47].text, 'money', 2000)
 								end
 							else
 								Show_Other(true, id_container, storage_table, money_state, size)
 								SendNUIMessage({type = "cleanTransfer"})
-								blockSpamming = false
 							end
 						else
 							Show_Other(true, id_container, storage_table, money_state, size)
 							SendNUIMessage({type = "cleanTransfer"})
-							blockSpamming = false
 						end
 					end
 				end)
@@ -298,12 +291,9 @@ RegisterNUICallback('transfer_from_storage', function(data, cb)
 			if data.used == 1 then
 				Show_Other(true, id_container, storage_table, money_state, size)
 				SendNUIMessage({type = "cleanTransfer"})
-				blockSpamming = false
 				exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, Config.Language[7].text, 'pistol', 2000)
 			else
 				TriggerServerEvent("gum_inventory:transfer_weapon_from_storage", data.item, id_container)
-				SendNUIMessage({type = "cleanTransfer"})
-				blockSpamming = false
 			end
 		end
 	end
@@ -1271,7 +1261,7 @@ function equip_weapon_login()
 		GiveWeaponToPed_2(PlayerPedId(), GetHashKey(weapon_second_used), 0, true,true, 3, false, 0.5, 1.0, 752097756, false,0, false);
 		GiveWeaponToPed_2(PlayerPedId(), GetHashKey(weapon_first_used), 0, true, true, 2, false, 0.5, 1.0, 752097756, false, 0, false);
 	end
-	Citizen.Wait(50)
+	Citizen.Wait(0)
 	TriggerEvent("gum_character:selected_char")
 	logged_true = true
 	can_save = true
@@ -1509,7 +1499,6 @@ RegisterNUICallback('use_UseWeapon', function(data, cb)
 						LoadCompAndAmmo(json.decode(v.ammo), json.decode(v.comps))
 						SetDirtToWeapon(v.id, v.conditionlevel)
 						Citizen.InvokeNative(0xFCCC886EDE3C63EC, PlayerPedId(), false, false, false)
-						Citizen.Wait(100)
 						TriggerServerEvent("gum_inventory:send_state_weapon", data.id, 1)
 						rifle_first_used = v.name
 						--exports['gum_notify']:DisplayLeftNotification(Config.Language[10].text, ""..Config.Language[15].text.."", 'bag', 1000)
@@ -1961,7 +1950,7 @@ Citizen.CreateThread(function()
 		if tonumber(speed) ~= 0 then
 			SetPedMaxMoveBlendRatio(PlayerPedId(), speed)
 		end
-		Citizen.Wait(0)
+		Citizen.Wait(5)
 	end
 end)
 RegisterNetEvent('gum_inventory:hostage')
