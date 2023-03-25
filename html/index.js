@@ -242,6 +242,7 @@ $(function() {
         if (item.type === "cleanTransfer") {
             blockMe = false
         }
+        
         if (item.type === "input_data") {
             if (item.status === true) {
                 allCount = 0
@@ -350,7 +351,7 @@ function loadTableData(table_inv, money, wtable_inv, gold) {
     }
     for (var i in wtable_inv) {
         count_winventory = count_winventory+1
-        dataHtml += '<div class="item" data-content="weapon"><div id="'+ i +'" class="item-content" onMouseOver="change_name_wep('+ i +')"  ondblclick="UseWeapon(\''+wtable_inv[i].id+'\',\''+wtable_inv[i].name+'\')"><img src="images/items/' + wtable_inv[i].name + '.png" width="60" height="60"  id="weapon"><div class="bottom-right" id="count_'+i+'"></div></div></div>'
+        dataHtml += '<div class="item" data-content="valuable"><div id="'+ i +'" class="item-content" onMouseOver="change_name_wep('+ i +')"  ondblclick="UseWeapon(\''+wtable_inv[i].id+'\',\''+wtable_inv[i].name+'\')"><img src="images/items/' + wtable_inv[i].name + '.png" width="60" height="60"  id="weapon"><div class="bottom-right" id="count_'+i+'"></div></div></div>'
     }
     tableBody.innerHTML = dataHtml
 }

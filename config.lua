@@ -50,5 +50,4 @@ Config.Language = {
     [44] = {text = "You cant hold more weapons.",},
     [45] = {text = "You must unequip first second weapon.",},
     [46] = {text = "Inventory storage is opened. But player is not active try again.",},
-    [47] = {text = "You have entered a wrong value.",},
 }

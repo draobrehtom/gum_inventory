@@ -227,10 +227,10 @@ AddEventHandler('gumCore:canCarryWeapons', function(source, count, cb)
 		cb(true)
 	end
 	if in_inventory_weapons[tonumber(_source)] ~= nil then
-		if in_inventory_weapons[tonumber(_source)]+1 <= Config.Max_Weapons then
-			cb(true)
-		else
+		if in_inventory_weapons[tonumber(_source)] >= Config.Max_Weapons then
 			cb(false)
+		else
+			cb(true)
 		end
 	end
 end)
@@ -1252,10 +1252,6 @@ AddEventHandler('gumCore:giveWeapon', function(source, weaponid, target)
 	local charid = Character.charIdentifier
 	exports.ghmattimysql:execute('SELECT id,identifier,name,ammo,used,comps,dirtlevel,conditionlevel FROM loadout WHERE charidentifier = @charidentifier AND identifier = @identifier' , {['charidentifier'] = charid, ['identifier'] = identifier}, function(result)
 		if result ~= nil then
-			in_inventory_weapons[tonumber(_source)] = 0
-			for k,v in pairs(result) do
-				in_inventory_weapons[tonumber(_source)] = k
-			end
 			if in_inventory_weapons[tonumber(_source)] >= Config.Max_Weapons and tonumber(target) == 0 then
 				TriggerClientEvent("gum_notify:notify", tonumber(_source), Config.Language[10].text, Config.Language[44].text, 'bag', 2500)
 				return false
@@ -1266,11 +1262,6 @@ AddEventHandler('gumCore:giveWeapon', function(source, weaponid, target)
 					local Character_t = User2.getUsedCharacter
 					local identifier_t = Character_t.identifier
 					local charid_t = Character_t.charIdentifier
-					if tonumber(in_inventory_weapons[tonumber(target)]) >= Config.Max_Weapons then
-						TriggerClientEvent("gum_notify:notify", tonumber(_source), Config.Language[10].text, Config.Language[43].text, 'bag', 2500)
-						TriggerClientEvent("gum_notify:notify", tonumber(target), Config.Language[10].text, Config.Language[44].text, 'bag', 2500)
-						return false
-					end
 					in_inventory_weapons[tonumber(target)] = tonumber(in_inventory_weapons[tonumber(target)])+1
 
 					exports.ghmattimysql:execute("UPDATE loadout SET identifier=@identifier_t, charidentifier=@charidentifier_t WHERE id = @id", {['identifier_t'] = identifier_t, ['charidentifier_t'] = charid_t, ['id'] = weaponid},
