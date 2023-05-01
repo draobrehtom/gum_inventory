@@ -1,6 +1,6 @@
 Locales = {}
 
-function _(str, ...) -- Translate string
+function _U(str, ...) -- Translate string first char uppercase
 	if Locales[Config.defaultlang] ~= nil then
 
 		if Locales[Config.defaultlang][str] ~= nil then
@@ -12,9 +12,4 @@ function _(str, ...) -- Translate string
 	else
 		return 'Locale [' .. Config.defaultlang .. '] does not exist'
 	end
-
-end
-
-function _U(str, ...) -- Translate string first char uppercase
-	return tostring(_(str, ...):gsub("^%l", string.upper))
 end
