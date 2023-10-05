@@ -1736,7 +1736,7 @@ Citizen.CreateThread(function()
 							end
 						end
 						if Citizen.InvokeNative(0x305C8DCD79DA8B0F, 0, 0x27D1C284) then
-							if v.weapon == false then 
+							if not v.weapon then 
 								if v.item ~= "money" and v.item ~= "gold" then
 									if Citizen.InvokeNative(0x305C8DCD79DA8B0F, 0, 0x27D1C284) then
 										local table_pl = {}
@@ -1751,7 +1751,8 @@ Citizen.CreateThread(function()
 											end
 										end
 										Citizen.Wait(0)
-										TriggerServerEvent("gum_inventory:drop_update", v.id, table_pl)
+										TriggerServerEvent("gumCore:takeItemFromGround", v.id, table_pl)
+										
 										playAnim("mech_pickup@fish_bag@pickup_handheld", "pickup", 2000, 1)
 										RequestControl(v.entity)
 										Citizen.Wait(500)
@@ -1764,12 +1765,6 @@ Citizen.CreateThread(function()
 											end
 										end
 										if math.type(tonumber(v.count)) == "integer" then 
-											if emptyMetadata == true then
-												TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count, v.metaData)
-											else
-												TriggerServerEvent("gumCore:addItem", GetPlayerServerId(PlayerId()), v.item, v.count)
-											end
-
 											Citizen.Wait(1000)
 										else
 											exports['gum_notify']:DisplayLeftNotification(_U('10'), _U('47'), 'money', 2000)
@@ -2168,6 +2163,7 @@ RegisterNUICallback('use_item', function(data, cb)
 	end
 end)
 
+-- It some sort debug functionality I guess, because it is not used inside NUI
 RegisterNUICallback('give_checked_item', function(data, cb)
 	if data.is == "item" then
 		if data.item ~= "money" and data.item ~= "gold" then
@@ -2280,23 +2276,26 @@ end)
 
 RegisterNetEvent('gum_inventory:drop_list')
 AddEventHandler('gum_inventory:drop_list', function(drop_list)
+
 	for k,v in pairs(dropped_items_entity) do
 		DeleteEntity(v.entity)
 	end
+
 	Citizen.Wait(500)
+	
 	if drop_list ~= false then
 		dropped_items_entity = {}
 		dropped_items = {}
 		Citizen.Wait(5)
 		for k,v in pairs(drop_list) do
-			if v.weapon == true then
+			if v.weapon then
 				dropped_item = CreateObject("mp005_s_posse_weaponslocker01x", v.x, v.y, v.z, false, false, false)
 				PlaceObjectOnGroundProperly(dropped_item)
 				FreezeEntityPosition(dropped_item, true)
 				Citizen.InvokeNative(0x7DFB49BCDB73089A, dropped_item, true)
 				table.insert(dropped_items_entity, {id=v.id, entity=dropped_item, x=v.x ,y=v.y, z=v.z, item=v.item, count=v.count, weapon=v.weapon, weapon_model=v.weapon_model})
 				SetEntityCollision(dropped_item, false, false)
-			elseif v.weapon == false then
+			else
 				if v.item == "money" then
 					dropped_item = CreateObject("p_moneystack01x", v.x, v.y, v.z, false, false, false)
 					PlaceObjectOnGroundProperly(dropped_item)
@@ -2345,12 +2344,11 @@ RegisterNUICallback('drop_item', function(data, cb)
 					for k,v in pairs(inventory_table) do
 						if tonumber(v.itemId) == tonumber(data.item) then 
 							if v.count >= tonumber(data.count) then
-								TriggerServerEvent("gumCore:subItemByID", GetPlayerServerId(PlayerId()), data.item, data.count)
 								local coords = GetEntityCoords(PlayerPedId(), true)
-								table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, itemid=v.itemId, item=v.item, count=data.count, metaData=data.metaData, weapon=false})
+								TriggerServerEvent("gumCore:dropItem", data.item, data.count, coords)
+								
 								playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 								Citizen.Wait(0)
-								TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
 								dropped_items = {}
 								Show_Items(false, false)
 								SetNuiFocus(false, false)
@@ -2368,6 +2366,7 @@ RegisterNUICallback('drop_item', function(data, cb)
 							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=false})
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
+							-- Drop money
 							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
 							dropped_items = {}
 							Show_Items(false, false)
@@ -2383,6 +2382,7 @@ RegisterNUICallback('drop_item', function(data, cb)
 							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=false})
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
+							-- Drop gold
 							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
 							dropped_items = {}
 							Show_Items(false, false)
@@ -2406,6 +2406,7 @@ RegisterNUICallback('drop_item', function(data, cb)
 							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=true, weapon_model=v.name})
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
+							-- Drop weapon
 							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
 							dropped_items = {}
 							Show_Items(false, false)
@@ -2839,7 +2840,7 @@ RegisterNUICallback('transferToPlayer', function(data, cb)
 				if data.weapon == false then
 					if tonumber(data.countInInventory) == 1 then
 						TriggerServerEvent("gum_inventory:turn_ped", tonumber(idPlayerForItem))
-						TriggerServerEvent("gumCore:subItemByID", GetPlayerServerId(PlayerId()), data.itemId, 1)
+
 						local emptyMetadata = false
 						if data.metaData ~= nil then
 							for z,x in pairs(data.metaData) do
@@ -2847,9 +2848,9 @@ RegisterNUICallback('transferToPlayer', function(data, cb)
 							end
 						end
 						if emptyMetadata == true then
-							TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, data.count, data.metaData, GetPlayerServerId(PlayerId()))
+							TriggerServerEvent('gumCore:transferItemToPlayer', tonumber(idPlayerForItem), data.itemId, data.count, data.metaData)
 						else
-							TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, data.count, nil, GetPlayerServerId(PlayerId()))
+							TriggerServerEvent('gumCore:transferItemToPlayer', tonumber(idPlayerForItem), data.itemId, data.count, nil)
 						end
 						clearThisFunction()
 					else
@@ -2867,9 +2868,9 @@ RegisterNUICallback('transferToPlayer', function(data, cb)
 										end
 									end
 									if emptyMetadata == true then
-										TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, count_item, data.metaData, GetPlayerServerId(PlayerId()))
+										TriggerServerEvent('gumCore:transferItemToPlayer', tonumber(idPlayerForItem), data.item, count_item, data.metaData)
 									else
-										TriggerServerEvent("gumCore:addItem", tonumber(idPlayerForItem), data.item, count_item, nil, GetPlayerServerId(PlayerId()))
+										TriggerServerEvent('gumCore:transferItemToPlayer', tonumber(idPlayerForItem), data.item, count_item, nil)
 									end
 									clearThisFunction()
 								else
@@ -2907,6 +2908,7 @@ function clearThisFunction()
 end
 
 Citizen.CreateThread(function()
+	local DEBUG = false
 	while true do
 		local loop = 500
 		if giveItemEnable then
@@ -2916,7 +2918,7 @@ Citizen.CreateThread(function()
 			local pCoords = GetEntityCoords(PlayerPedId())
 			playerDragId = 0
 			for k,v in pairs(GetPlayersClick()) do
-				if GetPlayerPed(GetPlayerFromServerId(v)) == c and PlayerPedId() ~= c then
+				if GetPlayerPed(GetPlayerFromServerId(v)) == c and (PlayerPedId() ~= c or DEBUG) then
 					if GetDistanceBetweenCoords(entity.x, entity.y, entity.z, pCoords.x, pCoords.y, pCoords.z, true) < 7.0 then
 						DisableControlAction(0, 0xB2F377E8, true)
 						DisableControlAction(0, 0x07CE1E61, true)
