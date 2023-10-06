@@ -1664,7 +1664,7 @@ Citizen.CreateThread(function()
 				end
 			end
 		end
-		Citizen.Wait(300)
+		Citizen.Wait(5000)
 	end
 end)
 
@@ -1751,7 +1751,8 @@ Citizen.CreateThread(function()
 											end
 										end
 										Citizen.Wait(0)
-										TriggerServerEvent("gumCore:takeItemFromGround", v.id, table_pl)
+										-- Take item
+										TriggerServerEvent("gum_inventory:takeDropFromGround", v.id, table_pl)
 										
 										playAnim("mech_pickup@fish_bag@pickup_handheld", "pickup", 2000, 1)
 										RequestControl(v.entity)
@@ -1784,13 +1785,12 @@ Citizen.CreateThread(function()
 											end
 										end
 										Citizen.Wait(0)
-										TriggerServerEvent("gum_inventory:drop_update", v.id, table_pl)
+										-- Take money
+										TriggerServerEvent("gum_inventory:takeDropFromGround", v.id, table_pl)
 										playAnim("mech_pickup@fish_bag@pickup_handheld", "pickup", 2000, 1)
 										RequestControl(v.entity)
 										Citizen.Wait(500)
 										DeleteEntity(v.entity)
-										table.remove(dropped_items_entity, k)
-										TriggerServerEvent("gum_inventory:drop_give_money", v.count)
 										Citizen.Wait(1000)
 									else
 										local table_pl = {}
@@ -1805,13 +1805,12 @@ Citizen.CreateThread(function()
 											end
 										end
 										Citizen.Wait(0)
-										TriggerServerEvent("gum_inventory:drop_update", v.id, table_pl)
+										-- Take gold
+										TriggerServerEvent("gum_inventory:takeDropFromGround", v.id, table_pl)
 										playAnim("mech_pickup@fish_bag@pickup_handheld", "pickup", 2000, 1)
 										RequestControl(v.entity)
 										Citizen.Wait(500)
 										DeleteEntity(v.entity)
-										table.remove(dropped_items_entity, k)
-										TriggerServerEvent("gum_inventory:drop_give_gold", v.count)
 										Citizen.Wait(1000)
 									end
 								end
@@ -1828,13 +1827,11 @@ Citizen.CreateThread(function()
 									end
 								end
 								Citizen.Wait(0)
-								TriggerServerEvent("gum_inventory:drop_update", v.id, table_pl)
+								TriggerServerEvent("gum_inventory:takeDropFromGround", v.id, table_pl)
 								playAnim("mech_pickup@fish_bag@pickup_handheld", "pickup", 2000, 1)
 								RequestControl(v.entity)
 								Citizen.Wait(500)
 								DeleteEntity(v.entity)
-								table.remove(dropped_items_entity, k)
-								TriggerServerEvent("gumCore:giveWeapon_dropped", GetPlayerServerId(PlayerId()), v.item)
 								Show_Items(false, false)
 								SetNuiFocus(false, false)
 								guiEnabled = false
@@ -2361,14 +2358,10 @@ RegisterNUICallback('drop_item', function(data, cb)
 				else
 					if data.item == "money" then
 						if tonumber(money_state) >= tonumber(data.count) then
-							TriggerServerEvent("gum_inventory:drop_money", data.count)
-							local coords = GetEntityCoords(PlayerPedId(), true)
-							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=false})
+							-- Drop money
+							TriggerServerEvent("gumCore:dropMoney", data.count, GetEntityCoords(PlayerPedId()))
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
-							-- Drop money
-							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
-							dropped_items = {}
 							Show_Items(false, false)
 							SetNuiFocus(false, false)
 							guiEnabled = false
@@ -2377,14 +2370,10 @@ RegisterNUICallback('drop_item', function(data, cb)
 						end
 					else
 						if tonumber(gold_state) >= tonumber(data.count) then
-							TriggerServerEvent("gum_inventory:drop_gold", data.count)
-							local coords = GetEntityCoords(PlayerPedId(), true)
-							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=false})
+							-- Drop gold
+							TriggerServerEvent("gumCore:dropGold", data.count, GetEntityCoords(PlayerPedId()))
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
-							-- Drop gold
-							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
-							dropped_items = {}
 							Show_Items(false, false)
 							SetNuiFocus(false, false)
 							guiEnabled = false
@@ -2401,14 +2390,12 @@ RegisterNUICallback('drop_item', function(data, cb)
 				for k,v in pairs(weapon_table) do
 					if v.id == data.item then 
 						if v.used == 0 then
-							TriggerServerEvent("gumCore:subWeapon", GetPlayerServerId(PlayerId()), tonumber(data.item))
+							-- Drop weapon
+							TriggerServerEvent("gumCore:dropWeapon", tonumber(data.item), GetEntityCoords(PlayerPedId()))
 							local coords = GetEntityCoords(PlayerPedId(), true)
-							table.insert(dropped_items, {x=coords.x ,y=coords.y, z=coords.z, item=data.item, count=data.count, weapon=true, weapon_model=v.name})
 							playAnim("mech_pickup@firewood", "putdown", 3000, 1)
 							Citizen.Wait(0)
 							-- Drop weapon
-							TriggerServerEvent("gum_inventory:upload_drops", dropped_items)
-							dropped_items = {}
 							Show_Items(false, false)
 							SetNuiFocus(false, false)
 							guiEnabled = false

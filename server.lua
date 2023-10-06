@@ -704,7 +704,6 @@ AddEventHandler('gum_inventory:get_money_sec', function(source)
 	TriggerClientEvent("gum_inventory:send_list_money", tonumber(_source), user_money, user_gold)
 end)
 
-RegisterServerEvent('gum_inventory:get_items_sec')
 AddEventHandler('gum_inventory:get_items_sec', function(source)
 	local _source = source
 	local User = gumCore.getUser(tonumber(_source))
@@ -808,7 +807,7 @@ RegisterServerEvent('gumCore:addItem')
 AddEventHandler('gumCore:addItem', function(source, name, count, metaDataData, playerBackup)
 	-- Fixed items exploit: https://github.com/Gum-Core/gum_inventory/issues/2
 	-- Uncomment only in case if you need to give yourself items during debugging/development
-	--addItem(source, name, count, metaDataData, playerBackup)
+	-- addItem(source, name, count, metaDataData, playerBackup)
 end)
 
 Citizen.CreateThread(function()
@@ -1081,58 +1080,6 @@ AddEventHandler('gum_inventory:give_gold', function(who_get, how_much, who_send)
 	end
 end)
 
-RegisterServerEvent('gum_inventory:drop_money')
-AddEventHandler('gum_inventory:drop_money', function(how_much)
-	local _source = source
-	local User = gumCore.getUser(tonumber(_source))
-	local Character = User.getUsedCharacter
-	local user_money = Character.money
-
-	if how_much <= user_money then
-		Character.removeCurrency(tonumber(_source), 0, tonumber(how_much))
-		TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
-	end
-end)
-
-RegisterServerEvent('gum_inventory:drop_gold')
-AddEventHandler('gum_inventory:drop_gold', function(how_much)
-	local _source = source
-	local User = gumCore.getUser(tonumber(_source))
-	local Character = User.getUsedCharacter
-	local user_gold = Character.gold
-
-	if how_much <= user_gold then
-		Character.removeCurrency(tonumber(_source), 1, tonumber(how_much))
-		TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
-	end
-end)
-
-RegisterServerEvent('gum_inventory:drop_give_money')
-AddEventHandler('gum_inventory:drop_give_money', function(how_much)
-	-- TODO: Secure this event. We can't directly set how much money can be received by player
-
-	local _source = source
-	local User = gumCore.getUser(tonumber(source))
-	local Character = User.getUsedCharacter
-
-	Character.addCurrency(tonumber(_source), 0, tonumber(how_much))
-	Citizen.Wait(50)
-	TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
-end)
-
-RegisterServerEvent('gum_inventory:drop_give_gold')
-AddEventHandler('gum_inventory:drop_give_gold', function(how_much)
-	-- TODO: Secure this event. We can't directly set how much gold can be received by player
-
-	local _source = source
-	local User = gumCore.getUser(tonumber(source))
-	local Character = User.getUsedCharacter
-
-	Character.addCurrency(tonumber(_source), 1, tonumber(how_much))
-	Citizen.Wait(50)
-	TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
-end)
-
 RegisterServerEvent('gum_inventory:turn_ped')
 AddEventHandler('gum_inventory:turn_ped', function(target)
 	local _source = source
@@ -1150,41 +1097,6 @@ AddEventHandler('gumCore:registerWeapon', function(target, name, ammo, comps)
 	exports.ghmattimysql:execute("INSERT loadout SET identifier=@identifier,  charidentifier=@charidentifier,  name=@name,  ammo=@ammo,  comps=@comps", {['identifier'] = identifier, ['charidentifier'] = charid, ['name'] = name, ['ammo'] = json.encode(ammo), ['comps']='{}'},
 	function (result)
 		TriggerEvent("gum_inventory:get_items_sec", tonumber(target))
-	end)
-end)
-
-
-
-RegisterServerEvent('gum_inventory:upload_drops')
-AddEventHandler('gum_inventory:upload_drops', function(dropped_items)
-	-- TODO: Secure this event. We can't directly pass dropped_items
-
-	local _source = source
-	local User = gumCore.getUser(tonumber(_source))
-	local Character = User.getUsedCharacter
-	local identifier = Character.identifier
-	local charid = Character.charIdentifier
-	local try_table = {}
-	local send_table = {}
-	local print_id = 0
-
-	exports.ghmattimysql:execute("INSERT drops SET drop_list=@drop_list", {['drop_list']= json.encode(dropped_items)},
-	function (result)
-		exports.ghmattimysql:execute('SELECT * FROM drops' , {}, function(result)
-			if result[1] ~= nil then
-				for k,v in pairs(result) do
-					for k2,v2 in pairs(v) do
-						try_table = json.decode(v.drop_list)
-						print_id = v.id
-					end
-					for k3,v3 in pairs(try_table) do
-						table.insert(send_table, {id=print_id, x=v3.x ,y=v3.y, z=v3.z, item=v3.item, count=v3.count, weapon=v3.weapon})
-					end
-				end
-				Citizen.Wait(500)
-				TriggerClientEvent("gum_inventory:drop_list", -1, send_table)
-			end
-		end)
 	end)
 end)
 
@@ -1244,19 +1156,6 @@ AddEventHandler('gum_inventory:check_drops_1', function()
 	end)
 end)
 
--- TODO: Remove it when is not needed. When everything will be fixed.
-RegisterServerEvent('gum_inventory:drop_update')
-AddEventHandler('gum_inventory:drop_update', function(id, playerlist)
-	local _source = source
-
-	exports.ghmattimysql:execute("DELETE FROM `drops` WHERE `id` = "..id.."", {},
-	function (result)
-		for k,v in pairs(playerlist) do
-			TriggerEvent("gum_inventory:check_drops", tonumber(v.id))
-		end
-	end)
-end)
-
 RegisterServerEvent('gumCore:giveWeapon')
 AddEventHandler('gumCore:giveWeapon', function(source, weaponid, target)
 	local _source = source
@@ -1294,39 +1193,6 @@ AddEventHandler('gumCore:giveWeapon', function(source, weaponid, target)
 		else
 			exports.ghmattimysql:execute("UPDATE loadout SET identifier=@identifier, charidentifier=@charid WHERE id = @id", {['identifier'] = identifier, ['charid'] = charid, ['id'] = weaponid},
 			function (result)
-				TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
-			end)
-		end
-	end)
-end)
-
-RegisterServerEvent('gumCore:giveWeapon_dropped')
-AddEventHandler('gumCore:giveWeapon_dropped', function(target, id_weapon)
-	local User = gumCore.getUser(tonumber(target))
-	local Character = User.getUsedCharacter
-	local identifier = Character.identifier
-	local charid = Character.charIdentifier
-
-	exports.ghmattimysql:execute("UPDATE loadout SET identifier=@identifier, charidentifier=@charidentifier WHERE id = @id", {['identifier'] = identifier, ['charidentifier'] = charid, ['id'] = id_weapon},
-	function (result)
-		TriggerEvent("gum_inventory:get_items_sec", tonumber(target))
-	end)
-end)
-
-
-RegisterServerEvent('gumCore:subWeapon')
-AddEventHandler('gumCore:subWeapon', function(source, weaponid)
-	local _source = source
-	local User = gumCore.getUser(tonumber(_source))
-	local Character = User.getUsedCharacter
-	local identifier = Character.identifier
-	local charid = Character.charIdentifier
-
-	exports.ghmattimysql:execute('SELECT name FROM loadout WHERE id=@id' , {["id"]=weaponid}, function(result)
-		if result ~= nil then
-			TriggerClientEvent("gum_inventory:remove_wepo", tonumber(_source), result[1].name)
-			exports.ghmattimysql:execute("UPDATE loadout SET identifier='', charidentifier=0, used=0 WHERE id = @id", {["@id"] = weaponid},
-				function (result)
 				TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
 			end)
 		end
@@ -1431,6 +1297,37 @@ local function getItem(playerId, itemId)
     return nil
 end
 
+local function addDrop(coords, itemName, itemAmount, isWeapon)
+	local send_table = {}
+
+	local dropped_items = {}
+	table.insert(dropped_items, {
+		x=coords.x ,
+		y=coords.y, 
+		z=coords.z, 
+		item=itemName, 
+		count=itemAmount, 
+		weapon=isWeapon
+	})
+
+	exports.ghmattimysql:execute("INSERT drops SET drop_list=@drop_list", {['drop_list']= json.encode(dropped_items)},
+	function (result)
+		exports.ghmattimysql:execute('SELECT * FROM drops' , {}, function(result)
+			if result[1] ~= nil then
+				for k,v in pairs(result) do
+					local try_table = json.decode(v.drop_list)
+					local print_id = v.id
+					for k3,v3 in pairs(try_table) do
+						table.insert(send_table, {id=print_id, x=v3.x ,y=v3.y, z=v3.z, item=v3.item, count=v3.count, weapon=v3.weapon})
+					end
+				end
+				Citizen.Wait(500)
+				TriggerClientEvent("gum_inventory:drop_list", -1, send_table)
+			end
+		end)
+	end)
+end
+
 RegisterNetEvent('gumCore:dropItem', function(itemId, itemAmount, atCoords)
 	local playerId = source
 
@@ -1440,12 +1337,6 @@ RegisterNetEvent('gumCore:dropItem', function(itemId, itemAmount, atCoords)
 	end
 
 	if removeInventoryItem(playerId, itemId, itemAmount) then
-		local _source = source
-
-		local send_table = {}
-
-		local dropped_items = {}
-
 		local coords = atCoords
 		local oneSyncState = GetConvar('onesync', 'off')
 		if oneSyncState == "off" or oneSyncState == "legacy" then
@@ -1455,37 +1346,41 @@ RegisterNetEvent('gumCore:dropItem', function(itemId, itemAmount, atCoords)
 			-- atCoords = GetEntityCoords(PlayerPedId())
 		end
 
-		table.insert(dropped_items, {
-			x=coords.x, y=coords.y, z=coords.z, 
-			itemid=item.itemId, 
-			item=item.item, 
-			count=itemAmount, 
-			metaData=item.metaData, 
-			weapon=item.is_weapon,
-		})
-
-		exports.ghmattimysql:execute("INSERT drops SET drop_list=@drop_list", {['drop_list']= json.encode(dropped_items)},
-		function (result)
-			exports.ghmattimysql:execute('SELECT * FROM drops' , {}, function(result)
-				if result[1] ~= nil then
-					for k,v in pairs(result) do
-						local try_table = json.decode(v.drop_list)
-						local print_id = v.id
-						for k3,v3 in pairs(try_table) do
-							table.insert(send_table, {id=print_id, x=v3.x ,y=v3.y, z=v3.z, item=v3.item, count=v3.count, weapon=v3.weapon})
-						end
-					end
-					Citizen.Wait(500)
-					TriggerClientEvent("gum_inventory:drop_list", -1, send_table)
-				end
-			end)
-		end)
-	else
-		print('Item was not removed')
+		addDrop(coords, item.item, itemAmount)
 	end
 end)
 
-RegisterNetEvent('gumCore:takeItemFromGround', function(dropId, nearPlayers)
+local function addMoney(playerId, moneyAmount)
+	local User = gumCore.getUser(tonumber(playerId))
+	local Character = User.getUsedCharacter
+	Character.addCurrency(tonumber(playerId), 0, tonumber(moneyAmount))
+	Citizen.Wait(50)
+	TriggerEvent("gum_inventory:get_items_sec", tonumber(playerId))
+end
+
+local function addGold(playerId, goldAmount)
+	local User = gumCore.getUser(tonumber(playerId))
+	local Character = User.getUsedCharacter
+
+	Character.addCurrency(tonumber(playerId), 1, tonumber(goldAmount))
+	Citizen.Wait(50)
+	TriggerEvent("gum_inventory:get_items_sec", tonumber(playerId))
+end
+
+local function giveWeapon(playerId, weaponName)
+	local User = gumCore.getUser(tonumber(playerId))
+	local Character = User.getUsedCharacter
+	local identifier = Character.identifier
+	local charid = Character.charIdentifier
+
+	exports.ghmattimysql:execute("UPDATE loadout SET identifier=@identifier, charidentifier=@charidentifier WHERE id = @id", {['identifier'] = identifier, ['charidentifier'] = charid, ['id'] = weaponName},
+	function (result)
+		TriggerEvent("gum_inventory:get_items_sec", tonumber(playerId))
+	end)
+end
+
+
+RegisterNetEvent('gum_inventory:takeDropFromGround', function(dropId, nearPlayers)
 	local playerId = source
 	
 	local playerCoords = nil
@@ -1510,7 +1405,7 @@ RegisterNetEvent('gumCore:takeItemFromGround', function(dropId, nearPlayers)
 				local itemAmount = v.count
 				local itemMetaData = v.metaData
 				local itemCoords = vector3(v.x, v.y, v.z)
-				
+				local isWeapon = v.weapon
 				
 				-- Check player coords
 				local isPlayerNearItem = true
@@ -1526,12 +1421,22 @@ RegisterNetEvent('gumCore:takeItemFromGround', function(dropId, nearPlayers)
 
 				-- Add item into player inventory
 				if isPlayerNearItem then
-					local success = addItem(playerId, itemName, itemAmount, itemMetaData)
-
-					if not success then
-						-- Store these items that were not added due to the inventory limit
-						table.insert(notAddedItems, v)
+					if itemName == 'money' then
+						addMoney(playerId, itemAmount)
+					elseif itemName == 'gold' then
+						addGold(playerId, itemAmount)
+					else
+						if isWeapon then
+							giveWeapon(playerId, itemName)
+						else
+							local success = addItem(playerId, itemName, itemAmount, itemMetaData)
+							if not success then
+								-- Store these items that were not added due to the inventory limit
+								table.insert(notAddedItems, v)
+							end
+						end
 					end
+
 				end
 			end
 
@@ -1579,4 +1484,54 @@ RegisterNetEvent('gumCore:transferItemToPlayer', function(toPlayerId, itemId, it
 	if removeInventoryItem(playerId, itemId, itemAmount) then
 		local success = addItem(toPlayerId, itemName, itemAmount, itemMetaData, tonumber(playerId))
 	end
+end)
+
+RegisterNetEvent('gumCore:dropMoney', function(moneyAmount, atCoords)
+	local _source = source
+	local User = gumCore.getUser(tonumber(_source))
+	local Character = User.getUsedCharacter
+	local user_money = Character.money
+
+	if moneyAmount <= user_money then
+		Character.removeCurrency(tonumber(_source), 0, tonumber(moneyAmount))
+		TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
+
+		local coords = atCoords--GetEntityCoords(PlayerPedId(), true)
+		addDrop(coords, 'money', moneyAmount)
+	end
+end)
+
+RegisterNetEvent('gumCore:dropGold', function(goldAmount, atCoords)
+	local _source = source
+	local User = gumCore.getUser(tonumber(_source))
+	local Character = User.getUsedCharacter
+	local user_gold = Character.gold
+
+	if goldAmount <= user_gold then
+		Character.removeCurrency(tonumber(_source), 1, tonumber(goldAmount))
+		TriggerEvent("gum_inventory:get_items_sec", tonumber(goldAmount))
+
+		
+		local coords = atCoords--GetEntityCoords(PlayerPedId(), true)
+		addDrop(coords, 'gold', goldAmount)
+	end
+end)
+
+RegisterNetEvent('gumCore:dropWeapon', function(weaponId, atCoords)
+	local _source = source
+	local User = gumCore.getUser(tonumber(_source))
+	local Character = User.getUsedCharacter
+	local identifier = Character.identifier
+	local charid = Character.charIdentifier
+
+	exports.ghmattimysql:execute('SELECT name FROM loadout WHERE id=@id' , {["id"]=weaponId}, function(result)
+		if result ~= nil then
+			TriggerClientEvent("gum_inventory:remove_wepo", tonumber(_source), result[1].name)
+			exports.ghmattimysql:execute("UPDATE loadout SET identifier='', charidentifier=0, used=0 WHERE id = @id", {["@id"] = weaponId},
+			function (result)
+				TriggerEvent("gum_inventory:get_items_sec", tonumber(_source))
+				addDrop(atCoords, weaponId, 1, true)
+			end)
+		end
+	end)
 end)
